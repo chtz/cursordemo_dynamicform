@@ -5,18 +5,22 @@ html, body {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   color: #213547;
+  background-color: #ffffff;
+  color-scheme: light only;
+  -webkit-color-scheme: light only;
 }
 
 #app-wrapper {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  background-color: #ffffff;
 }
 
 /* Header */
 header {
   width: 100vw;
-  background-color: #fff;
+  background-color: #ffffff;
   box-shadow: 0 2px 6px rgba(0,0,0,0.08);
   position: sticky;
   top: 0;
@@ -43,6 +47,7 @@ header h1 {
 /* Content container */
 .container {
   flex: 1;
+  background-color: #ffffff;
 }
 
 main {
@@ -59,6 +64,7 @@ main {
 footer {
   width: 100vw;
   border-top: 1px solid #eaeaea;
+  background-color: #ffffff;
 }
 
 .footer-content {
@@ -94,6 +100,7 @@ footer {
   padding: 3px 8px;
   border-radius: 3px;
   transition: all 0.2s;
+  background-color: transparent;
 }
 
 .language-link:hover {
@@ -185,12 +192,14 @@ input:checked + .slider:before {
   background-color: #f0f8ff;
   border-radius: 8px;
   border-left: 4px solid #646cff;
+  color: #333333;
 }
 
 .debug-editor h2 {
   margin-top: 0;
   font-size: 18px;
   margin-bottom: 15px;
+  color: #333333;
 }
 
 .editor-controls {
@@ -208,7 +217,8 @@ input:checked + .slider:before {
   padding: 12px;
   border: 1px solid #ddd;
   border-radius: 4px;
-  background-color: #fff;
+  background-color: #ffffff;
+  color: #333333;
   resize: vertical;
 }
 
@@ -323,6 +333,8 @@ input:checked + .slider:before {
   line-height: 1.5;
   resize: vertical;
   transition: border-color 0.3s;
+  background-color: #ffffff;
+  color: #333333;
 }
 
 .text-input:focus {
@@ -351,6 +363,7 @@ input:checked + .slider:before {
 .form-title h2 {
   font-size: 22px;
   margin: 0;
+  color: #333333;
 }
 
 .form-paragraph {
@@ -407,6 +420,7 @@ input:checked + .slider:before {
 
 .results-container h2 {
   margin-top: 0;
+  color: #333333;
 }
 
 pre {
@@ -415,6 +429,7 @@ pre {
   border-radius: 4px;
   overflow-x: auto;
   border: 1px solid #ddd;
+  color: #333333;
 }
 
 /* Markdown styling */
@@ -553,5 +568,21 @@ pre {
     height: 8px;
     border-radius: 50%;
     background: white;
+  }
+  
+  /* Fix for iOS dark mode specifically */
+  .json-editor {
+    background-color: #ffffff !important;
+    color: #333333 !important;
+    -webkit-text-fill-color: #333333;
+  }
+  
+  #app-wrapper,
+  body,
+  main,
+  .container,
+  header,
+  footer {
+    background-color: #ffffff !important;
   }
 }
