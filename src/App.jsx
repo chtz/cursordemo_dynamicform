@@ -95,7 +95,7 @@ function App() {
       errorLoading: "Error loading answers",
       questionsReset: "All data reset to default and cleared from storage",
       answersCleared: "Answers have been cleared",
-      footer: "© 2024 Dynamic Form. All rights reserved.",
+      footer: "© 2024 @cht_z. All rights reserved.",
       language: "Language"
     },
     de: {
@@ -119,7 +119,7 @@ function App() {
       errorLoading: "Fehler beim Laden der Antworten",
       questionsReset: "Alle Daten auf Standardwerte zurückgesetzt und aus dem Speicher gelöscht",
       answersCleared: "Antworten wurden gelöscht",
-      footer: "© 2024 Dynamisches Formular. Alle Rechte vorbehalten.",
+      footer: "© 2024 @cht_z. Alle Rechte vorbehalten.",
       language: "Sprache"
     }
   };
