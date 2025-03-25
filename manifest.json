@@ -2,7 +2,7 @@
   "name": "Dynamic Form",
   "short_name": "DynaForm",
   "description": "A dynamic form application for collecting and managing user responses",
-  "start_url": "/",
+  "start_url": "/cursordemo_dynamicform/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#ffffff",
