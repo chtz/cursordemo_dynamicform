@@ -4,6 +4,8 @@ This interactive form application was created **entirely by AI** using Cursor ID
 
 > **Note**: This is a demonstration project only and should not be used in production environments.
 
+**Live Demo**: [https://chtz.github.io/cursordemo_dynamicform/](https://chtz.github.io/cursordemo_dynamicform/)
+
 ## Features
 
 - **Form Functionality**
