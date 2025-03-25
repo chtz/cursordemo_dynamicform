@@ -14,7 +14,7 @@ export const saveAnswers = async (answers) => {
     // Store in localStorage for now
     localStorage.setItem(ANSWERS_STORAGE_KEY, JSON.stringify(answers));
 
-    console.log('Saving answers:', answers);
+    console.log('Saving answers:', JSON.stringify(answers));
 
     return answers;
 

@@ -3,68 +3,131 @@ import './App.css'
 import { saveAnswers, loadAnswers, saveQuestions, loadQuestions, clearAllStoredData } from './services/answerService'
 
 function App() {
-  // Define initial form items with different types
+  // Define initial form items with different types, language support, and identifiers
   const initialFormItems = [
     {
+      id: "section-preferences",
       type: "title",
-      content: "Personal Preferences"
+      content: {
+        en: "Personal Preferences",
+        de: "Persönliche Präferenzen"
+      }
     },
     {
+      id: "text-preferences-intro",
       type: "text",
-      content: "Please tell us about your preferences to help us personalize your experience."
+      content: {
+        en: "Please tell us about your preferences to help us personalize your experience.",
+        de: "Bitte teilen Sie uns Ihre Präferenzen mit, damit wir Ihr Erlebnis personalisieren können."
+      }
     },
     {
+      id: "q-color",
       type: "choice",
-      question: "Your favourite color?",
-      options: ["blue", "green", "red", "yellow"]
+      question: {
+        en: "Your favourite color?",
+        de: "Deine Lieblingsfarbe?"
+      },
+      options: [
+        { id: "color-blue", en: "blue", de: "blau" },
+        { id: "color-green", en: "green", de: "grün" },
+        { id: "color-red", en: "red", de: "rot" },
+        { id: "color-yellow", en: "yellow", de: "gelb" }
+      ]
     },
     {
-      type: "choice",
-      question: "Your beloved pet?",
-      options: ["cat", "dog", "fish", "bird"]
-    },
-    {
+      id: "section-travel",
       type: "title",
-      content: "About You"
+      content: {
+        en: "Travel & Seasons",
+        de: "Reisen & Jahreszeiten"
+      }
     },
     {
+      id: "q-travel",
       type: "text",
-      content: "We'd like to know more about your interests and experiences."
-    },
-    {
-      type: "text",
-      question: "Tell us about your hobbies",
-      placeholder: "I enjoy..."
-    },
-    {
-      type: "title",
-      content: "Travel & Seasons"
-    },
-    {
-      type: "choice",
-      question: "Your preferred season?",
-      options: ["spring", "summer", "fall", "winter"]
-    },
-    {
-      type: "text",
-      question: "What's your favorite travel destination?",
-      placeholder: "Enter destination and why you love it..."
+      question: {
+        en: "What's your favorite travel destination?",
+        de: "Was ist dein Lieblings-Reiseziel?"
+      },
+      placeholder: {
+        en: "Enter destination and why you love it...",
+        de: "Geben Sie das Reiseziel ein und warum Sie es lieben..."
+      }
     }
   ];
-  
+
+  // App state
   const [formItems, setFormItems] = useState(initialFormItems);
   const [questionsJson, setQuestionsJson] = useState('');
-
-  // State to store user's answers
-  const [userAnswers, setUserAnswers] = useState({});
+  const [userAnswers, setUserAnswers] = useState({ language: 'en', answers: {} });
   const [saveStatus, setSaveStatus] = useState('');
   const [questionsStatus, setQuestionsStatus] = useState('');
   const [debugMode, setDebugMode] = useState(false);
   const [jsonError, setJsonError] = useState('');
   const [validationErrors, setValidationErrors] = useState({});
-  
+  const [language, setLanguage] = useState('en'); // Default language is English
+
   // Reference to the form element
   const formRef = useRef(null);
+
+  // Translations for UI elements
+  const uiTranslations = {
+    en: {
+      title: "Welcome to Dynamic Form",
+      debugMode: "Debug Mode",
+      formItems: "Form Items (Debug Mode)",
+      formatJson: "Format JSON",
+      saveQuestions: "Save Questions",
+      loadQuestions: "Load Questions",
+      resetAllData: "Reset All Data",
+      saveAnswers: "Save Answers",
+      loadAnswers: "Load Answers",
+      yourAnswers: "Your Answers (Debug Mode)",
+      required: "*",
+      answerRequired: "This question requires an answer",
+      pleaseAnswerAll: "Please answer all questions before saving",
+      savedSuccessfully: "Answers saved successfully",
+      loadedSuccessfully: "Answers loaded successfully",
+      noSavedAnswers: "No saved answers found",
+      errorSaving: "Error saving answers",
+      errorLoading: "Error loading answers",
+      questionsReset: "All data reset to default and cleared from storage",
+      answersCleared: "Answers have been cleared",
+      footer: "© 2024 Dynamic Form. All rights reserved.",
+      language: "Language"
+    },
+    de: {
+      title: "Willkommen beim dynamischen Formular",
+      debugMode: "Debug-Modus",
+      formItems: "Formularelemente (Debug-Modus)",
+      formatJson: "JSON formatieren",
+      saveQuestions: "Fragen speichern",
+      loadQuestions: "Fragen laden",
+      resetAllData: "Alle Daten zurücksetzen",
+      saveAnswers: "Antworten speichern",
+      loadAnswers: "Antworten laden",
+      yourAnswers: "Deine Antworten (Debug-Modus)",
+      required: "*",
+      answerRequired: "Diese Frage erfordert eine Antwort",
+      pleaseAnswerAll: "Bitte beantworte alle Fragen, bevor du speicherst",
+      savedSuccessfully: "Antworten erfolgreich gespeichert",
+      loadedSuccessfully: "Antworten erfolgreich geladen",
+      noSavedAnswers: "Keine gespeicherten Antworten gefunden",
+      errorSaving: "Fehler beim Speichern der Antworten",
+      errorLoading: "Fehler beim Laden der Antworten",
+      questionsReset: "Alle Daten auf Standardwerte zurückgesetzt und aus dem Speicher gelöscht",
+      answersCleared: "Antworten wurden gelöscht",
+      footer: "© 2024 Dynamisches Formular. Alle Rechte vorbehalten.",
+      language: "Sprache"
+    }
+  };
+
+  // Helper function to get text in current language
+  const getText = (textObj) => {
+    if (!textObj) return '';
+    return textObj[language] || textObj.en || '';
+  };
 
   // Load questions and answers from storage when component mounts
   useEffect(() => {
@@ -73,9 +136,9 @@ function App() {
         // Load questions
         const savedQuestions = await loadQuestions();
         if (savedQuestions) {
-          console.log('Loaded questions from localStorage:', savedQuestions);
+          console.log('Loaded questions from localStorage:', JSON.stringify(savedQuestions));
           setFormItems(savedQuestions);
-          setQuestionsStatus('Questions loaded successfully from localStorage');
+          setQuestionsStatus(getText(uiTranslations[language].loadedSuccessfully));
         } else {
           console.log('No saved questions found, using initial questions');
           // No saved questions, use initial questions
@@ -85,16 +148,24 @@ function App() {
         // Load answers
         const savedAnswers = await loadAnswers();
         if (savedAnswers) {
-          setUserAnswers(savedAnswers);
-          setSaveStatus('Answers loaded successfully');
+          // Check if answers are in the new format (with language)
+          if (savedAnswers.language && savedAnswers.answers) {
+            setUserAnswers(savedAnswers);
+            // Set the language based on saved preference
+            setLanguage(savedAnswers.language);
+          } else {
+            // Handle legacy format (just answers object)
+            setUserAnswers({ language, answers: savedAnswers });
+          }
+          setSaveStatus(uiTranslations[language].loadedSuccessfully);
           setTimeout(() => setSaveStatus(''), 3000);
         }
       } catch (error) {
         console.error('Failed to load saved data:', error);
-        setQuestionsStatus('Error loading questions: ' + error.message);
+        setQuestionsStatus(`Error loading questions: ${error.message}`);
       }
     };
-    
+
     fetchData();
   }, []);
 
@@ -105,32 +176,60 @@ function App() {
     }
   }, [debugMode]);
 
+  // Handle language change
+  const handleLanguageChange = (e) => {
+    const newLanguage = e.target.value;
+    setLanguage(newLanguage);
+
+    // Update the language in the userAnswers object
+    setUserAnswers(prev => ({
+      ...prev,
+      language: newLanguage
+    }));
+
+    // Update status messages with new language
+    if (saveStatus) {
+      setSaveStatus(uiTranslations[newLanguage][saveStatus]);
+    }
+  };
+
+  // Find a question item by its ID
+  const findQuestionById = (questionId) => {
+    return formItems.find(item => item.id === questionId);
+  };
+
   // Handle choice/radio button change
-  const handleChoiceChange = (question, answer) => {
-    setUserAnswers({
-      ...userAnswers,
-      [question]: answer
-    });
-    
+  const handleChoiceChange = (questionId, optionId) => {
+    setUserAnswers(prev => ({
+      ...prev,
+      answers: {
+        ...prev.answers,
+        [questionId]: optionId
+      }
+    }));
+
     // Clear validation error for this question when answered
-    if (validationErrors[question]) {
+    if (validationErrors[questionId]) {
       const newErrors = { ...validationErrors };
-      delete newErrors[question];
+      delete newErrors[questionId];
       setValidationErrors(newErrors);
     }
   };
 
   // Handle text input change
-  const handleTextChange = (question, value) => {
-    setUserAnswers({
-      ...userAnswers,
-      [question]: value
-    });
-    
+  const handleTextChange = (questionId, value) => {
+    setUserAnswers(prev => ({
+      ...prev,
+      answers: {
+        ...prev.answers,
+        [questionId]: value
+      }
+    }));
+
     // Clear validation error for this question if it has content
-    if (value.trim() && validationErrors[question]) {
+    if (value.trim() && validationErrors[questionId]) {
       const newErrors = { ...validationErrors };
-      delete newErrors[question];
+      delete newErrors[questionId];
       setValidationErrors(newErrors);
     }
   };
@@ -139,22 +238,22 @@ function App() {
   const validateForm = () => {
     const errors = {};
     let isValid = true;
-    
+
     formItems.forEach(item => {
       // Skip validation for non-input items
       if (item.type === 'title' || (item.type === 'text' && !item.question)) {
         return;
       }
-      
-      const answer = userAnswers[item.question];
-      
+
+      const answer = userAnswers.answers[item.id];
+
       // Check if answer exists and is not empty
       if (!answer || (typeof answer === 'string' && answer.trim() === '')) {
-        errors[item.question] = 'This question requires an answer';
+        errors[item.id] = uiTranslations[language].answerRequired;
         isValid = false;
       }
     });
-    
+
     setValidationErrors(errors);
     return isValid;
   };
@@ -162,13 +261,13 @@ function App() {
   // Handle form submission
   const handleSubmit = (e) => {
     e.preventDefault();
-    
+
     if (validateForm()) {
       handleSaveAnswers();
     } else {
-      setSaveStatus('Please answer all questions before saving');
+      setSaveStatus(uiTranslations[language].pleaseAnswerAll);
       setTimeout(() => setSaveStatus(''), 3000);
-      
+
       // Scroll to the first error if any
       const firstErrorQuestion = Object.keys(validationErrors)[0];
       if (firstErrorQuestion) {
@@ -183,11 +282,12 @@ function App() {
   // Handle saving answers
   const handleSaveAnswers = async () => {
     try {
+      // Save both the answers and the current language
       await saveAnswers(userAnswers);
-      setSaveStatus('Answers saved successfully');
+      setSaveStatus(uiTranslations[language].savedSuccessfully);
       setTimeout(() => setSaveStatus(''), 3000);
     } catch (error) {
-      setSaveStatus('Error saving answers');
+      setSaveStatus(uiTranslations[language].errorSaving);
       setTimeout(() => setSaveStatus(''), 3000);
     }
   };
@@ -197,17 +297,25 @@ function App() {
     try {
       const savedAnswers = await loadAnswers();
       if (savedAnswers) {
-        setUserAnswers(savedAnswers);
-        setSaveStatus('Answers loaded successfully');
+        // Check if answers are in the new format
+        if (savedAnswers.language && savedAnswers.answers) {
+          setUserAnswers(savedAnswers);
+          // Set the language based on saved preference
+          setLanguage(savedAnswers.language);
+        } else {
+          // Handle legacy format
+          setUserAnswers({ language, answers: savedAnswers });
+        }
+        setSaveStatus(uiTranslations[language].loadedSuccessfully);
       } else {
-        setSaveStatus('No saved answers found');
+        setSaveStatus(uiTranslations[language].noSavedAnswers);
       }
       setTimeout(() => setSaveStatus(''), 3000);
-      
+
       // Clear validation errors when loading new answers
       setValidationErrors({});
     } catch (error) {
-      setSaveStatus('Error loading answers');
+      setSaveStatus(uiTranslations[language].errorLoading);
       setTimeout(() => setSaveStatus(''), 3000);
     }
   };
@@ -216,10 +324,10 @@ function App() {
   const handleSaveQuestions = async () => {
     try {
       await saveQuestions(formItems);
-      setQuestionsStatus('Questions saved successfully');
+      setQuestionsStatus(uiTranslations[language].savedSuccessfully);
       setTimeout(() => setQuestionsStatus(''), 3000);
     } catch (error) {
-      setQuestionsStatus('Error saving questions: ' + error.message);
+      setQuestionsStatus(`${uiTranslations[language].errorSaving}: ${error.message}`);
       setTimeout(() => setQuestionsStatus(''), 3000);
     }
   };
@@ -231,18 +339,18 @@ function App() {
       if (savedQuestions) {
         setFormItems(savedQuestions);
         setQuestionsJson(JSON.stringify(savedQuestions, null, 2));
-        setQuestionsStatus('Questions loaded successfully');
+        setQuestionsStatus(uiTranslations[language].loadedSuccessfully);
       } else {
-        setQuestionsStatus('No saved questions found, using initial questions');
+        setQuestionsStatus(uiTranslations[language].noSavedAnswers);
         setFormItems(initialFormItems);
         setQuestionsJson(JSON.stringify(initialFormItems, null, 2));
       }
       setTimeout(() => setQuestionsStatus(''), 3000);
-      
+
       // Reset validation errors when questions change
       setValidationErrors({});
     } catch (error) {
-      setQuestionsStatus('Error loading questions: ' + error.message);
+      setQuestionsStatus(`${uiTranslations[language].errorLoading}: ${error.message}`);
       setTimeout(() => setQuestionsStatus(''), 3000);
     }
   };
@@ -252,28 +360,28 @@ function App() {
     try {
       // Clear all data from localStorage
       await clearAllStoredData();
-      
+
       // Reset questions to initial state
       setFormItems(initialFormItems);
       setQuestionsJson(JSON.stringify(initialFormItems, null, 2));
-      
+
       // Reset answers
-      setUserAnswers({});
-      
+      setUserAnswers({ language, answers: {} });
+
       // Clear validation errors
       setValidationErrors({});
-      
+
       // Update status messages
-      setQuestionsStatus('All data reset to default and cleared from storage');
-      setSaveStatus('Answers have been cleared');
-      
+      setQuestionsStatus(uiTranslations[language].questionsReset);
+      setSaveStatus(uiTranslations[language].answersCleared);
+
       // Clear status messages after delay
       setTimeout(() => {
         setQuestionsStatus('');
         setSaveStatus('');
       }, 3000);
     } catch (error) {
-      setQuestionsStatus('Error resetting data: ' + error.message);
+      setQuestionsStatus(`Error resetting data: ${error.message}`);
       setTimeout(() => setQuestionsStatus(''), 3000);
     }
   };
@@ -291,7 +399,7 @@ function App() {
   const handleQuestionsJsonChange = (e) => {
     const newValue = e.target.value;
     setQuestionsJson(newValue);
-    
+
     try {
       const parsedQuestions = JSON.parse(newValue);
       if (Array.isArray(parsedQuestions)) {
@@ -317,83 +425,94 @@ function App() {
     }
   };
 
+  // Find option object by its ID
+  const findOptionById = (item, optionId) => {
+    if (!item.options) return null;
+    return item.options.find(option => option.id === optionId);
+  };
+
   // Render a form item based on its type
   const renderFormItem = (item, index) => {
-    const hasError = item.question && validationErrors[item.question];
-    
+    const hasError = validationErrors[item.id];
+
     switch (item.type) {
       case 'title':
         return (
           <div key={index} className="form-title">
-            <h2>{item.content}</h2>
+            <h2>{getText(item.content)}</h2>
           </div>
         );
-        
+
       case 'text':
         // If it has a question property, it's an input field
         if (item.question) {
           return (
-            <div 
-              key={index} 
+            <div
+              key={index}
               className={`question-container ${hasError ? 'has-error' : ''}`}
-              data-question={item.question}
+              data-question={item.id}
             >
               <p className="question-label">
-                {item.question}
-                <span className="required-indicator">*</span>
+                {getText(item.question)}
+                <span className="required-indicator">{uiTranslations[language].required}</span>
               </p>
               <textarea
                 className="text-input"
-                placeholder={item.placeholder || "Enter your answer..."}
-                value={userAnswers[item.question] || ''}
-                onChange={(e) => handleTextChange(item.question, e.target.value)}
+                placeholder={getText(item.placeholder)}
+                value={userAnswers.answers[item.id] || ''}
+                onChange={(e) => handleTextChange(item.id, e.target.value)}
                 rows={4}
                 required
                 minLength={1}
               />
-              {hasError && <div className="validation-error">{validationErrors[item.question]}</div>}
+              {hasError && <div className="validation-error">{validationErrors[item.id]}</div>}
             </div>
           );
         } else {
           // If it only has content, it's a display paragraph
           return (
             <div key={index} className="form-paragraph">
-              <p>{item.content}</p>
+              <p>{getText(item.content)}</p>
             </div>
           );
         }
-      
+
       case 'choice':
         return (
-          <div 
-            key={index} 
+          <div
+            key={index}
             className={`question-container ${hasError ? 'has-error' : ''}`}
-            data-question={item.question}
+            data-question={item.id}
           >
             <p className="question-label">
-              {item.question}
-              <span className="required-indicator">*</span>
+              {getText(item.question)}
+              <span className="required-indicator">{uiTranslations[language].required}</span>
             </p>
             <div className="answer-options">
-              {item.options.map((option, optionIndex) => (
-                <div key={optionIndex} className="radio-option">
-                  <input
-                    type="radio"
-                    id={`q${index}-a${optionIndex}`}
-                    name={`question-${index}`}
-                    value={option}
-                    checked={userAnswers[item.question] === option}
-                    onChange={() => handleChoiceChange(item.question, option)}
-                    required
-                  />
-                  <label htmlFor={`q${index}-a${optionIndex}`}>{option}</label>
-                </div>
-              ))}
+              {item.options.map((option, optionIndex) => {
+                const optionValue = getText(option);
+                const optionId = option.id;
+
+                return (
+                  <div key={optionIndex} className="radio-option">
+                    <input
+                      type="radio"
+                      id={`q${index}-a${optionIndex}`}
+                      name={`question-${index}`}
+                      value={optionId}
+                      checked={userAnswers.answers[item.id] === optionId}
+                      onChange={() => handleChoiceChange(item.id, optionId)}
+                      required
+                    />
+                    <label htmlFor={`q${index}-a${optionIndex}`}>{optionValue}</label>
+                  </div>
+                );
+              })}
             </div>
-            {hasError && <div className="validation-error">{validationErrors[item.question]}</div>}
+            {hasError && <div className="validation-error">{validationErrors[item.id]}</div>}
           </div>
         );
-      
+
       default:
         return <div key={index}>Unsupported item type: {item.type}</div>;
     }
@@ -402,12 +521,23 @@ function App() {
   return (
     <div className="container">
       <header>
-        <h1>Welcome to Dynamic Form</h1>
+        <h1>{uiTranslations[language].title}</h1>
+        <div className="language-selector">
+          <label htmlFor="language-select">{uiTranslations[language].language}:</label>
+          <select
+            id="language-select"
+            value={language}
+            onChange={handleLanguageChange}
+          >
+            <option value="en">English</option>
+            <option value="de">Deutsch</option>
+          </select>
+        </div>
       </header>
       <main>
         <div className="debug-control">
           <label htmlFor="debug-toggle" className="debug-label">
-            Debug Mode
+            {uiTranslations[language].debugMode}
             <div className="toggle-switch">
               <input
                 type="checkbox"
@@ -422,14 +552,22 @@ function App() {
 
         {debugMode && (
           <div className="debug-editor">
-            <h2>Form Items (Debug Mode)</h2>
+            <h2>{uiTranslations[language].formItems}</h2>
             <div className="editor-controls">
-              <button type="button" className="secondary-button" onClick={formatJson}>Format JSON</button>
-              <button type="button" className="secondary-button" onClick={handleSaveQuestions}>Save Questions</button>
-              <button type="button" className="secondary-button" onClick={handleLoadQuestions}>Load Questions</button>
-              <button type="button" className="secondary-button danger-button" onClick={handleResetQuestions}>Reset All Data</button>
+              <button type="button" className="secondary-button" onClick={formatJson}>
+                {uiTranslations[language].formatJson}
+              </button>
+              <button type="button" className="secondary-button" onClick={handleSaveQuestions}>
+                {uiTranslations[language].saveQuestions}
+              </button>
+              <button type="button" className="secondary-button" onClick={handleLoadQuestions}>
+                {uiTranslations[language].loadQuestions}
+              </button>
+              <button type="button" className="secondary-button danger-button" onClick={handleResetQuestions}>
+                {uiTranslations[language].resetAllData}
+              </button>
             </div>
-            <textarea 
+            <textarea
               className={`json-editor ${jsonError ? 'json-error' : ''}`}
               value={questionsJson}
               onChange={handleQuestionsJsonChange}
@@ -442,24 +580,28 @@ function App() {
 
         <form onSubmit={handleSubmit} ref={formRef} noValidate>
           {formItems.map((item, index) => renderFormItem(item, index))}
-          
+
           <div className="button-group">
-            <button type="submit" className="primary-button">Save Answers</button>
-            <button type="button" className="primary-button" onClick={handleLoadAnswers}>Load Answers</button>
+            <button type="submit" className="primary-button">
+              {uiTranslations[language].saveAnswers}
+            </button>
+            <button type="button" className="primary-button" onClick={handleLoadAnswers}>
+              {uiTranslations[language].loadAnswers}
+            </button>
           </div>
-          
+
           {saveStatus && <div className={`status-message ${saveStatus.includes('Please') ? 'error-status' : ''}`}>{saveStatus}</div>}
         </form>
 
-        {debugMode && Object.keys(userAnswers).length > 0 && (
+        {debugMode && Object.keys(userAnswers.answers).length > 0 && (
           <div className="results-container">
-            <h2>Your Answers (Debug Mode)</h2>
+            <h2>{uiTranslations[language].yourAnswers}</h2>
             <pre>{JSON.stringify(userAnswers, null, 2)}</pre>
           </div>
         )}
       </main>
       <footer>
-        <p>© 2024 Dynamic Form. All rights reserved.</p>
+        <p>{uiTranslations[language].footer}</p>
       </footer>
     </div>
   )
