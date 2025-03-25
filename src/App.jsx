@@ -1,26 +1,42 @@
 import { useState, useEffect } from 'react'
 import './App.css'
-import { saveAnswers, loadAnswers } from './services/answerService'
+import { saveAnswers, loadAnswers, saveQuestions, loadQuestions } from './services/answerService'
 
 function App() {
-  // Define questions and their possible answers
-  const [questionsAndAnswers, setQuestionsAndAnswers] = useState([
+  // Define initial questions and their possible answers
+  const initialQuestions = [
     {"Your favourite color?": ["blue", "green", "red", "yellow"]},
     {"Your beloved pet?": ["cat", "dog", "fish", "bird"]},
     {"Your preferred season?": ["spring", "summer", "fall", "winter"]}
-  ]);
+  ];
+  
+  const [questionsAndAnswers, setQuestionsAndAnswers] = useState(initialQuestions);
   const [questionsJson, setQuestionsJson] = useState('');
 
   // State to store user's answers
   const [userAnswers, setUserAnswers] = useState({});
   const [saveStatus, setSaveStatus] = useState('');
+  const [questionsStatus, setQuestionsStatus] = useState('');
   const [debugMode, setDebugMode] = useState(false);
   const [jsonError, setJsonError] = useState('');
 
-  // Load answers from storage when component mounts
+  // Load questions and answers from storage when component mounts
   useEffect(() => {
-    const fetchAnswers = async () => {
+    const fetchData = async () => {
       try {
+        // Load questions
+        const savedQuestions = await loadQuestions();
+        if (savedQuestions) {
+          console.log('Loaded questions from localStorage:', savedQuestions);
+          setQuestionsAndAnswers(savedQuestions);
+          setQuestionsStatus('Questions loaded successfully from localStorage');
+        } else {
+          console.log('No saved questions found, using initial questions');
+          // No saved questions, use initial questions
+          setQuestionsAndAnswers(initialQuestions);
+        }
+
+        // Load answers
         const savedAnswers = await loadAnswers();
         if (savedAnswers) {
           setUserAnswers(savedAnswers);
@@ -28,19 +44,20 @@ function App() {
           setTimeout(() => setSaveStatus(''), 3000);
         }
       } catch (error) {
-        console.error('Failed to load saved answers:', error);
+        console.error('Failed to load saved data:', error);
+        setQuestionsStatus('Error loading questions: ' + error.message);
       }
     };
     
-    fetchAnswers();
+    fetchData();
   }, []);
 
-  // Update questions JSON when debug mode is enabled
+  // Update questions JSON when debug mode is toggled
   useEffect(() => {
     if (debugMode) {
       setQuestionsJson(JSON.stringify(questionsAndAnswers, null, 2));
     }
-  }, [debugMode, questionsAndAnswers]);
+  }, [debugMode]);
 
   // Handle radio button change
   const handleAnswerChange = (question, answer) => {
@@ -79,9 +96,53 @@ function App() {
     }
   };
 
+  // Handle saving questions
+  const handleSaveQuestions = async () => {
+    try {
+      await saveQuestions(questionsAndAnswers);
+      setQuestionsStatus('Questions saved successfully');
+      setTimeout(() => setQuestionsStatus(''), 3000);
+    } catch (error) {
+      setQuestionsStatus('Error saving questions: ' + error.message);
+      setTimeout(() => setQuestionsStatus(''), 3000);
+    }
+  };
+
+  // Handle loading questions
+  const handleLoadQuestions = async () => {
+    try {
+      const savedQuestions = await loadQuestions();
+      if (savedQuestions) {
+        setQuestionsAndAnswers(savedQuestions);
+        setQuestionsJson(JSON.stringify(savedQuestions, null, 2));
+        setQuestionsStatus('Questions loaded successfully');
+      } else {
+        setQuestionsStatus('No saved questions found, using initial questions');
+        setQuestionsAndAnswers(initialQuestions);
+        setQuestionsJson(JSON.stringify(initialQuestions, null, 2));
+      }
+      setTimeout(() => setQuestionsStatus(''), 3000);
+    } catch (error) {
+      setQuestionsStatus('Error loading questions: ' + error.message);
+      setTimeout(() => setQuestionsStatus(''), 3000);
+    }
+  };
+
+  // Reset questions to initial default
+  const handleResetQuestions = () => {
+    setQuestionsAndAnswers(initialQuestions);
+    setQuestionsJson(JSON.stringify(initialQuestions, null, 2));
+    setQuestionsStatus('Questions reset to default');
+    setTimeout(() => setQuestionsStatus(''), 3000);
+  };
+
   // Toggle debug mode
   const toggleDebugMode = () => {
     setDebugMode(!debugMode);
+    if (!debugMode) {
+      // When turning debug mode on, update the JSON display
+      setQuestionsJson(JSON.stringify(questionsAndAnswers, null, 2));
+    }
   };
 
   // Handle questions JSON edit
@@ -98,6 +159,7 @@ function App() {
         setJsonError('Questions data must be an array');
       }
     } catch (error) {
+      // Only show error, don't update the form if JSON is invalid
       setJsonError('Invalid JSON format');
     }
   };
@@ -139,6 +201,9 @@ function App() {
             <h2>Questions and Answers (Debug Mode)</h2>
             <div className="editor-controls">
               <button type="button" className="secondary-button" onClick={formatJson}>Format JSON</button>
+              <button type="button" className="secondary-button" onClick={handleSaveQuestions}>Save Questions</button>
+              <button type="button" className="secondary-button" onClick={handleLoadQuestions}>Load Questions</button>
+              <button type="button" className="secondary-button" onClick={handleResetQuestions}>Reset to Default</button>
             </div>
             <textarea 
               className={`json-editor ${jsonError ? 'json-error' : ''}`}
@@ -147,6 +212,7 @@ function App() {
               rows={10}
             />
             {jsonError && <div className="error-message">{jsonError}</div>}
+            {questionsStatus && <div className="status-message">{questionsStatus}</div>}
           </div>
         )}
 

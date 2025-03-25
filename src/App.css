@@ -113,7 +113,8 @@ input:checked + .slider:before {
 
 .editor-controls {
   display: flex;
-  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 10px;
   margin-bottom: 10px;
 }
 
