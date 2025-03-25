@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import './App.css'
 import { saveAnswers, loadAnswers, saveQuestions, loadQuestions, clearAllStoredData } from './services/answerService'
 
@@ -41,6 +41,10 @@ function App() {
   const [questionsStatus, setQuestionsStatus] = useState('');
   const [debugMode, setDebugMode] = useState(false);
   const [jsonError, setJsonError] = useState('');
+  const [validationErrors, setValidationErrors] = useState({});
+  
+  // Reference to the form element
+  const formRef = useRef(null);
 
   // Load questions and answers from storage when component mounts
   useEffect(() => {
@@ -87,6 +91,13 @@ function App() {
       ...userAnswers,
       [question]: answer
     });
+    
+    // Clear validation error for this question when answered
+    if (validationErrors[question]) {
+      const newErrors = { ...validationErrors };
+      delete newErrors[question];
+      setValidationErrors(newErrors);
+    }
   };
 
   // Handle text input change
@@ -95,6 +106,53 @@ function App() {
       ...userAnswers,
       [question]: value
     });
+    
+    // Clear validation error for this question if it has content
+    if (value.trim() && validationErrors[question]) {
+      const newErrors = { ...validationErrors };
+      delete newErrors[question];
+      setValidationErrors(newErrors);
+    }
+  };
+
+  // Validate the form to ensure all questions have answers
+  const validateForm = () => {
+    const errors = {};
+    let isValid = true;
+    
+    formItems.forEach(item => {
+      const answer = userAnswers[item.question];
+      
+      // Check if answer exists and is not empty
+      if (!answer || (typeof answer === 'string' && answer.trim() === '')) {
+        errors[item.question] = 'This question requires an answer';
+        isValid = false;
+      }
+    });
+    
+    setValidationErrors(errors);
+    return isValid;
+  };
+
+  // Handle form submission
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    
+    if (validateForm()) {
+      handleSaveAnswers();
+    } else {
+      setSaveStatus('Please answer all questions before saving');
+      setTimeout(() => setSaveStatus(''), 3000);
+      
+      // Scroll to the first error if any
+      const firstErrorQuestion = Object.keys(validationErrors)[0];
+      if (firstErrorQuestion) {
+        const errorElement = document.querySelector(`[data-question="${firstErrorQuestion}"]`);
+        if (errorElement) {
+          errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }
+    }
   };
 
   // Handle saving answers
@@ -120,6 +178,9 @@ function App() {
         setSaveStatus('No saved answers found');
       }
       setTimeout(() => setSaveStatus(''), 3000);
+      
+      // Clear validation errors when loading new answers
+      setValidationErrors({});
     } catch (error) {
       setSaveStatus('Error loading answers');
       setTimeout(() => setSaveStatus(''), 3000);
@@ -152,6 +213,9 @@ function App() {
         setQuestionsJson(JSON.stringify(initialFormItems, null, 2));
       }
       setTimeout(() => setQuestionsStatus(''), 3000);
+      
+      // Reset validation errors when questions change
+      setValidationErrors({});
     } catch (error) {
       setQuestionsStatus('Error loading questions: ' + error.message);
       setTimeout(() => setQuestionsStatus(''), 3000);
@@ -170,6 +234,9 @@ function App() {
       
       // Reset answers
       setUserAnswers({});
+      
+      // Clear validation errors
+      setValidationErrors({});
       
       // Update status messages
       setQuestionsStatus('All data reset to default and cleared from storage');
@@ -227,11 +294,20 @@ function App() {
 
   // Render a form item based on its type
   const renderFormItem = (item, index) => {
+    const hasError = validationErrors[item.question];
+    
     switch (item.type) {
       case 'choice':
         return (
-          <div key={index} className="question-container">
-            <p className="question-label">{item.question}</p>
+          <div 
+            key={index} 
+            className={`question-container ${hasError ? 'has-error' : ''}`}
+            data-question={item.question}
+          >
+            <p className="question-label">
+              {item.question}
+              <span className="required-indicator">*</span>
+            </p>
             <div className="answer-options">
               {item.options.map((option, optionIndex) => (
                 <div key={optionIndex} className="radio-option">
@@ -242,25 +318,37 @@ function App() {
                     value={option}
                     checked={userAnswers[item.question] === option}
                     onChange={() => handleChoiceChange(item.question, option)}
+                    required
                   />
                   <label htmlFor={`q${index}-a${optionIndex}`}>{option}</label>
                 </div>
               ))}
             </div>
+            {hasError && <div className="validation-error">{validationErrors[item.question]}</div>}
           </div>
         );
       
       case 'text':
         return (
-          <div key={index} className="question-container">
-            <p className="question-label">{item.question}</p>
+          <div 
+            key={index} 
+            className={`question-container ${hasError ? 'has-error' : ''}`}
+            data-question={item.question}
+          >
+            <p className="question-label">
+              {item.question}
+              <span className="required-indicator">*</span>
+            </p>
             <textarea
               className="text-input"
               placeholder={item.placeholder || "Enter your answer..."}
               value={userAnswers[item.question] || ''}
               onChange={(e) => handleTextChange(item.question, e.target.value)}
               rows={4}
+              required
+              minLength={1}
             />
+            {hasError && <div className="validation-error">{validationErrors[item.question]}</div>}
           </div>
         );
       
@@ -310,15 +398,15 @@ function App() {
           </div>
         )}
 
-        <form>
+        <form onSubmit={handleSubmit} ref={formRef} noValidate>
           {formItems.map((item, index) => renderFormItem(item, index))}
           
           <div className="button-group">
-            <button type="button" className="primary-button" onClick={handleSaveAnswers}>Save Answers</button>
+            <button type="submit" className="primary-button">Save Answers</button>
             <button type="button" className="primary-button" onClick={handleLoadAnswers}>Load Answers</button>
           </div>
           
-          {saveStatus && <div className="status-message">{saveStatus}</div>}
+          {saveStatus && <div className={`status-message ${saveStatus.includes('Please') ? 'error-status' : ''}`}>{saveStatus}</div>}
         </form>
 
         {debugMode && Object.keys(userAnswers).length > 0 && (

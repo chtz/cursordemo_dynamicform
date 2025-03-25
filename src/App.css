@@ -314,3 +314,33 @@ footer {
 .text-input::placeholder {
   color: #aaa;
 }
+
+.required-indicator {
+  color: #ff4d4f;
+  margin-left: 4px;
+}
+
+.validation-error {
+  color: #ff4d4f;
+  font-size: 14px;
+  margin-top: 8px;
+}
+
+.question-container.has-error .question-label {
+  color: #ff4d4f;
+}
+
+.question-container.has-error .text-input,
+.question-container.has-error .radio-option {
+  border-color: #ff4d4f;
+}
+
+.question-container.has-error .text-input {
+  background-color: #fff1f0;
+  border-color: #ff4d4f;
+}
+
+.error-status {
+  background-color: #fff1f0;
+  border-left-color: #ff4d4f;
+}
