@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import './App.css'
+import ReactMarkdown from 'react-markdown'
 import { saveAnswers, loadAnswers, saveQuestions, loadQuestions, clearAllStoredData } from './services/answerService'
 
 function App() {
@@ -17,16 +18,16 @@ function App() {
       id: "text-preferences-intro",
       type: "text",
       content: {
-        en: "Please tell us about your preferences to help us personalize your experience.",
-        de: "Bitte teilen Sie uns Ihre Präferenzen mit, damit wir Ihr Erlebnis personalisieren können."
+        en: "Please tell us about your **preferences** to help us personalize your experience. See our [privacy policy](https://example.com/privacy) for more information.",
+        de: "Bitte teilen Sie uns Ihre **Präferenzen** mit, damit wir Ihr Erlebnis personalisieren können. Lesen Sie unsere [Datenschutzrichtlinie](https://example.com/privacy) für weitere Informationen."
       }
     },
     {
       id: "q-color",
       type: "choice",
       question: {
-        en: "Your favourite color?",
-        de: "Deine Lieblingsfarbe?"
+        en: "Your **favourite** color?",
+        de: "Deine **Lieblingsfarbe**?"
       },
       options: [
         { id: "color-blue", en: "blue", de: "blau" },
@@ -47,8 +48,8 @@ function App() {
       id: "q-travel",
       type: "text",
       question: {
-        en: "What's your favorite travel destination?",
-        de: "Was ist dein Lieblings-Reiseziel?"
+        en: "What's your **favorite** travel destination? Check [travel advisories](https://example.com/travel).",
+        de: "Was ist dein **Lieblings**-Reiseziel? Überprüfen Sie [Reisehinweise](https://example.com/travel)."
       },
       placeholder: {
         en: "Enter destination and why you love it...",
@@ -431,6 +432,22 @@ function App() {
     return item.options.find(option => option.id === optionId);
   };
 
+  // Enhanced Text component that supports markdown
+  const MarkdownText = ({ text, className }) => {
+    return (
+      <div className={className}>
+        <ReactMarkdown components={{
+          // Set up custom components for links to open in new tab
+          a: ({node, ...props}) => (
+            <a {...props} target="_blank" rel="noopener noreferrer" />
+          )
+        }}>
+          {text}
+        </ReactMarkdown>
+      </div>
+    );
+  };
+
   // Render a form item based on its type
   const renderFormItem = (item, index) => {
     const hasError = validationErrors[item.id];
@@ -439,7 +456,9 @@ function App() {
       case 'title':
         return (
           <div key={index} className="form-title">
-            <h2>{getText(item.content)}</h2>
+            <h2>
+              <MarkdownText text={getText(item.content)} />
+            </h2>
           </div>
         );
 
@@ -453,7 +472,7 @@ function App() {
               data-question={item.id}
             >
               <p className="question-label">
-                {getText(item.question)}
+                <MarkdownText text={getText(item.question)} />
                 <span className="required-indicator">{uiTranslations[language].required}</span>
               </p>
               <textarea
@@ -472,7 +491,10 @@ function App() {
           // If it only has content, it's a display paragraph
           return (
             <div key={index} className="form-paragraph">
-              <p>{getText(item.content)}</p>
+              <MarkdownText 
+                text={getText(item.content)} 
+                className="form-paragraph-content"
+              />
             </div>
           );
         }
@@ -485,7 +507,7 @@ function App() {
             data-question={item.id}
           >
             <p className="question-label">
-              {getText(item.question)}
+              <MarkdownText text={getText(item.question)} />
               <span className="required-indicator">{uiTranslations[language].required}</span>
             </p>
             <div className="answer-options">
@@ -504,7 +526,9 @@ function App() {
                       onChange={() => handleChoiceChange(item.id, optionId)}
                       required
                     />
-                    <label htmlFor={`q${index}-a${optionIndex}`}>{optionValue}</label>
+                    <label htmlFor={`q${index}-a${optionIndex}`}>
+                      <MarkdownText text={optionValue} />
+                    </label>
                   </div>
                 );
               })}
