@@ -156,6 +156,16 @@ input:checked + .slider:before {
   background-color: #e6e8ff;
 }
 
+.danger-button {
+  background-color: #fff1f0;
+  color: #ff4d4f;
+  border-color: #ff4d4f;
+}
+
+.danger-button:hover {
+  background-color: #ffccc7;
+}
+
 .question-container {
   margin-bottom: 25px;
   padding-bottom: 15px;

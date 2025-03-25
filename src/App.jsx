@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import './App.css'
-import { saveAnswers, loadAnswers, saveQuestions, loadQuestions } from './services/answerService'
+import { saveAnswers, loadAnswers, saveQuestions, loadQuestions, clearAllStoredData } from './services/answerService'
 
 function App() {
   // Define initial questions and their possible answers
@@ -128,12 +128,32 @@ function App() {
     }
   };
 
-  // Reset questions to initial default
-  const handleResetQuestions = () => {
-    setQuestionsAndAnswers(initialQuestions);
-    setQuestionsJson(JSON.stringify(initialQuestions, null, 2));
-    setQuestionsStatus('Questions reset to default');
-    setTimeout(() => setQuestionsStatus(''), 3000);
+  // Reset questions and answers to initial default and clear localStorage
+  const handleResetQuestions = async () => {
+    try {
+      // Clear all data from localStorage
+      await clearAllStoredData();
+      
+      // Reset questions to initial state
+      setQuestionsAndAnswers(initialQuestions);
+      setQuestionsJson(JSON.stringify(initialQuestions, null, 2));
+      
+      // Reset answers
+      setUserAnswers({});
+      
+      // Update status messages
+      setQuestionsStatus('All data reset to default and cleared from storage');
+      setSaveStatus('Answers have been cleared');
+      
+      // Clear status messages after delay
+      setTimeout(() => {
+        setQuestionsStatus('');
+        setSaveStatus('');
+      }, 3000);
+    } catch (error) {
+      setQuestionsStatus('Error resetting data: ' + error.message);
+      setTimeout(() => setQuestionsStatus(''), 3000);
+    }
   };
 
   // Toggle debug mode
@@ -203,7 +223,7 @@ function App() {
               <button type="button" className="secondary-button" onClick={formatJson}>Format JSON</button>
               <button type="button" className="secondary-button" onClick={handleSaveQuestions}>Save Questions</button>
               <button type="button" className="secondary-button" onClick={handleLoadQuestions}>Load Questions</button>
-              <button type="button" className="secondary-button" onClick={handleResetQuestions}>Reset to Default</button>
+              <button type="button" className="secondary-button danger-button" onClick={handleResetQuestions}>Reset All Data</button>
             </div>
             <textarea 
               className={`json-editor ${jsonError ? 'json-error' : ''}`}

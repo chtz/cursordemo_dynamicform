@@ -13,8 +13,11 @@ export const saveAnswers = async (answers) => {
   try {
     // Store in localStorage for now
     localStorage.setItem(ANSWERS_STORAGE_KEY, JSON.stringify(answers));
+
+    console.log('Saving answers:', answers);
+
     return answers;
-    
+
     // When switching to REST API, replace with:
     // const response = await fetch('/api/answers', {
     //   method: 'POST',
@@ -37,7 +40,7 @@ export const loadAnswers = async () => {
     // Get from localStorage for now
     const storedAnswers = localStorage.getItem(ANSWERS_STORAGE_KEY);
     return storedAnswers ? JSON.parse(storedAnswers) : null;
-    
+
     // When switching to REST API, replace with:
     // const response = await fetch('/api/answers');
     // return response.json();
@@ -57,7 +60,7 @@ export const saveQuestions = async (questions) => {
     // Store in localStorage for now
     localStorage.setItem(QUESTIONS_STORAGE_KEY, JSON.stringify(questions));
     return questions;
-    
+
     // When switching to REST API, replace with:
     // const response = await fetch('/api/questions', {
     //   method: 'POST',
@@ -80,12 +83,32 @@ export const loadQuestions = async () => {
     // Get from localStorage for now
     const storedQuestions = localStorage.getItem(QUESTIONS_STORAGE_KEY);
     return storedQuestions ? JSON.parse(storedQuestions) : null;
-    
+
     // When switching to REST API, replace with:
     // const response = await fetch('/api/questions');
     // return response.json();
   } catch (error) {
     console.error('Error loading questions:', error);
     return null;
+  }
+};
+
+/**
+ * Clear all stored data (questions and answers)
+ * @returns {Promise} - Promise resolving when clear is complete
+ */
+export const clearAllStoredData = async () => {
+  try {
+    // Remove from localStorage for now
+    localStorage.removeItem(QUESTIONS_STORAGE_KEY);
+    localStorage.removeItem(ANSWERS_STORAGE_KEY);
+    return true;
+    
+    // When switching to REST API, replace with:
+    // const response = await fetch('/api/clear', { method: 'DELETE' });
+    // return response.ok;
+  } catch (error) {
+    console.error('Error clearing stored data:', error);
+    throw error;
   }
 }; 
