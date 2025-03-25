@@ -75,7 +75,7 @@ function App() {
   // Translations for UI elements
   const uiTranslations = {
     en: {
-      title: "Welcome to Dynamic Form",
+      title: "DynamicForm",
       debugMode: "Debug Mode",
       formItems: "Form Items (Debug Mode)",
       formatJson: "Format JSON",
@@ -99,7 +99,7 @@ function App() {
       language: "Language"
     },
     de: {
-      title: "Willkommen beim dynamischen Formular",
+      title: "DynamicForm",
       debugMode: "Debug-Modus",
       formItems: "Formularelemente (Debug-Modus)",
       formatJson: "JSON formatieren",
@@ -560,90 +560,128 @@ function App() {
     }
   };
 
-  return (
-    <div className="container">
-      <header>
-        <h1>{uiTranslations[language].title}</h1>
-        <div className="language-selector">
-          <label htmlFor="language-select">{uiTranslations[language].language}:</label>
-          <select
-            id="language-select"
-            value={language}
-            onChange={handleLanguageChange}
+  // Render language selector as links
+  const LanguageSelector = ({ currentLanguage, onChange }) => {
+    const handleLanguageChange = (langCode) => {
+      onChange({ target: { value: langCode } });
+    };
+    
+    return (
+      <div className="language-selector">
+        <span>{uiTranslations[language].language}:</span>
+        <div className="language-links">
+          <a 
+            href="#" 
+            className={`language-link ${currentLanguage === 'en' ? 'active' : ''}`}
+            onClick={(e) => { 
+              e.preventDefault(); 
+              handleLanguageChange('en'); 
+            }}
           >
-            <option value="en">English</option>
-            <option value="de">Deutsch</option>
-          </select>
+            EN
+          </a>
+          <span>|</span>
+          <a 
+            href="#" 
+            className={`language-link ${currentLanguage === 'de' ? 'active' : ''}`}
+            onClick={(e) => { 
+              e.preventDefault(); 
+              handleLanguageChange('de'); 
+            }}
+          >
+            DE
+          </a>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div id="app-wrapper">
+      <header>
+        <div className="header-content">
+          <h1>{uiTranslations[language].title}</h1>
+          <div className="header-controls">
+            <div className="debug-control">
+              <label htmlFor="debug-toggle" className="debug-label">
+                {uiTranslations[language].debugMode}
+                <div className="toggle-switch">
+                  <input
+                    type="checkbox"
+                    id="debug-toggle"
+                    checked={debugMode}
+                    onChange={toggleDebugMode}
+                  />
+                  <span className="slider"></span>
+                </div>
+              </label>
+            </div>
+            <LanguageSelector 
+              currentLanguage={language} 
+              onChange={handleLanguageChange} 
+            />
+          </div>
         </div>
       </header>
-      <main>
-        <div className="debug-control">
-          <label htmlFor="debug-toggle" className="debug-label">
-            {uiTranslations[language].debugMode}
-            <div className="toggle-switch">
-              <input
-                type="checkbox"
-                id="debug-toggle"
-                checked={debugMode}
-                onChange={toggleDebugMode}
+      
+      <div className="container">
+        <main>
+          {debugMode && (
+            <div className="debug-editor">
+              <h2>{uiTranslations[language].formItems}</h2>
+              <div className="editor-controls">
+                <button type="button" className="secondary-button" onClick={formatJson}>
+                  {uiTranslations[language].formatJson}
+                </button>
+                <button type="button" className="secondary-button" onClick={handleSaveQuestions}>
+                  {uiTranslations[language].saveQuestions}
+                </button>
+                <button type="button" className="secondary-button" onClick={handleLoadQuestions}>
+                  {uiTranslations[language].loadQuestions}
+                </button>
+                <button type="button" className="secondary-button danger-button" onClick={handleResetQuestions}>
+                  {uiTranslations[language].resetAllData}
+                </button>
+              </div>
+              <textarea
+                className={`json-editor ${jsonError ? 'json-error' : ''}`}
+                value={questionsJson}
+                onChange={handleQuestionsJsonChange}
+                rows={10}
               />
-              <span className="slider"></span>
+              {jsonError && <div className="error-message">{jsonError}</div>}
+              {questionsStatus && <div className="status-message">{questionsStatus}</div>}
             </div>
-          </label>
-        </div>
+          )}
 
-        {debugMode && (
-          <div className="debug-editor">
-            <h2>{uiTranslations[language].formItems}</h2>
-            <div className="editor-controls">
-              <button type="button" className="secondary-button" onClick={formatJson}>
-                {uiTranslations[language].formatJson}
+          <form onSubmit={handleSubmit} ref={formRef} noValidate>
+            {formItems.map((item, index) => renderFormItem(item, index))}
+
+            <div className="button-group">
+              <button type="submit" className="primary-button">
+                {uiTranslations[language].saveAnswers}
               </button>
-              <button type="button" className="secondary-button" onClick={handleSaveQuestions}>
-                {uiTranslations[language].saveQuestions}
-              </button>
-              <button type="button" className="secondary-button" onClick={handleLoadQuestions}>
-                {uiTranslations[language].loadQuestions}
-              </button>
-              <button type="button" className="secondary-button danger-button" onClick={handleResetQuestions}>
-                {uiTranslations[language].resetAllData}
+              <button type="button" className="primary-button" onClick={handleLoadAnswers}>
+                {uiTranslations[language].loadAnswers}
               </button>
             </div>
-            <textarea
-              className={`json-editor ${jsonError ? 'json-error' : ''}`}
-              value={questionsJson}
-              onChange={handleQuestionsJsonChange}
-              rows={10}
-            />
-            {jsonError && <div className="error-message">{jsonError}</div>}
-            {questionsStatus && <div className="status-message">{questionsStatus}</div>}
-          </div>
-        )}
 
-        <form onSubmit={handleSubmit} ref={formRef} noValidate>
-          {formItems.map((item, index) => renderFormItem(item, index))}
+            {saveStatus && <div className={`status-message ${saveStatus.includes('Please') ? 'error-status' : ''}`}>{saveStatus}</div>}
+          </form>
 
-          <div className="button-group">
-            <button type="submit" className="primary-button">
-              {uiTranslations[language].saveAnswers}
-            </button>
-            <button type="button" className="primary-button" onClick={handleLoadAnswers}>
-              {uiTranslations[language].loadAnswers}
-            </button>
-          </div>
-
-          {saveStatus && <div className={`status-message ${saveStatus.includes('Please') ? 'error-status' : ''}`}>{saveStatus}</div>}
-        </form>
-
-        {debugMode && Object.keys(userAnswers.answers).length > 0 && (
-          <div className="results-container">
-            <h2>{uiTranslations[language].yourAnswers}</h2>
-            <pre>{JSON.stringify(userAnswers, null, 2)}</pre>
-          </div>
-        )}
-      </main>
+          {debugMode && Object.keys(userAnswers.answers).length > 0 && (
+            <div className="results-container">
+              <h2>{uiTranslations[language].yourAnswers}</h2>
+              <pre>{JSON.stringify(userAnswers, null, 2)}</pre>
+            </div>
+          )}
+        </main>
+      </div>
+      
       <footer>
-        <p>{uiTranslations[language].footer}</p>
+        <div className="footer-content">
+          <p>{uiTranslations[language].footer}</p>
+        </div>
       </footer>
     </div>
   )

@@ -1,103 +1,151 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
+/* Layout structure */
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  overflow-x: hidden; /* Prevent horizontal scrolling */
+}
+
+body {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   color: #213547;
 }
 
-.container {
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 20px;
-  font-family: Arial, sans-serif;
+#app-wrapper {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  width: 100vw; /* Use viewport width unit */
 }
 
+/* Header styling - always full width */
 header {
-  text-align: center;
-  margin-bottom: 30px;
+  width: 100vw; /* Use viewport width unit */
+  background-color: #ffffff;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  justify-content: center;
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 15px 20px;
+  box-sizing: border-box;
 }
 
 header h1 {
+  font-size: 1.4rem;
+  margin: 0;
   color: #333;
 }
 
+/* Language selector as links */
+.language-selector {
+  margin: 0;
+  display: flex;
+  align-items: center;
+}
+
+.language-selector span {
+  font-size: 0.9rem;
+  color: #555;
+  margin-right: 8px;
+}
+
+.language-links {
+  display: flex;
+  gap: 8px;
+}
+
+.language-link {
+  font-size: 0.9rem;
+  color: #777;
+  text-decoration: none;
+  padding: 3px 8px;
+  border-radius: 3px;
+  transition: all 0.2s;
+}
+
+.language-link:hover {
+  background-color: #f0f2ff;
+}
+
+.language-link.active {
+  font-weight: 600;
+  color: #646cff;
+  background-color: #f0f2ff;
+}
+
+/* Content area - full width */
+.container {
+  flex: 1;
+  width: 100vw; /* Use viewport width unit */
+  display: flex;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
 main {
+  width: 100%;
+  margin: 15px 20px;
   background: #f9f9f9;
   border-radius: 8px;
   padding: 20px;
   box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  box-sizing: border-box;
 }
 
-/* Debug Control Styles */
+/* Footer styling - always full width */
+footer {
+  width: 100vw; /* Use viewport width unit */
+  background-color: #ffffff;
+  border-top: 1px solid #eaeaea;
+  display: flex;
+  justify-content: center;
+}
+
+.footer-content {
+  width: 100%;
+  padding: 10px 20px;
+  text-align: center;
+  color: #777;
+  font-size: 0.75rem;
+  box-sizing: border-box;
+}
+
+/* Debug Control Styles - moved to header */
 .debug-control {
   display: flex;
-  justify-content: flex-end;
-  margin-bottom: 20px;
+  align-items: center;
+  margin: 0;
 }
 
 .debug-label {
   display: flex;
   align-items: center;
-  font-size: 14px;
+  font-size: 0.85rem;
   color: #666;
   cursor: pointer;
+  white-space: nowrap;
 }
 
-.toggle-switch {
-  position: relative;
-  display: inline-block;
-  width: 50px;
-  height: 24px;
-  margin-left: 10px;
-}
-
-.toggle-switch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-
-.slider {
-  position: absolute;
-  cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: #ccc;
-  transition: .4s;
-  border-radius: 24px;
-}
-
-.slider:before {
-  position: absolute;
-  content: "";
-  height: 16px;
-  width: 16px;
-  left: 4px;
-  bottom: 4px;
-  background-color: white;
-  transition: .4s;
-  border-radius: 50%;
-}
-
-input:checked + .slider {
-  background-color: #646cff;
-}
-
-input:focus + .slider {
-  box-shadow: 0 0 1px #646cff;
-}
-
-input:checked + .slider:before {
-  transform: translateX(26px);
+/* Header controls group */
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 15px;
 }
 
 /* JSON Editor Styles */
 .debug-editor {
-  margin-bottom: 30px;
+  margin-bottom: 20px;
   padding: 15px;
   background-color: #f0f8ff;
   border-radius: 8px;
@@ -251,49 +299,6 @@ pre {
   border: 1px solid #ddd;
 }
 
-footer {
-  margin-top: 30px;
-  text-align: center;
-  color: #777;
-  font-size: 14px;
-}
-
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
-}
-
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
-}
-
-.card {
-  padding: 2em;
-}
-
-.read-the-docs {
-  color: #888;
-}
-
 .text-input {
   width: calc(100% - 24px);
   margin-left: auto;
@@ -380,35 +385,6 @@ footer {
   margin: 0;
 }
 
-.language-selector {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-top: 10px;
-  gap: 10px;
-}
-
-.language-selector label {
-  font-size: 16px;
-  color: #555;
-}
-
-.language-selector select {
-  padding: 6px 12px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-size: 14px;
-  cursor: pointer;
-  background-color: white;
-  transition: border-color 0.3s;
-}
-
-.language-selector select:focus {
-  outline: none;
-  border-color: #646cff;
-  box-shadow: 0 0 0 3px rgba(100, 108, 255, 0.1);
-}
-
 /* Markdown styling */
 .form-title h2 strong {
   color: #646cff;
@@ -448,4 +424,54 @@ footer {
 .radio-option label p {
   display: inline;
   margin: 0;
+}
+
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  height: 20px;
+  margin-left: 8px;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: .3s;
+  border-radius: 20px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 14px;
+  width: 14px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .3s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: #646cff;
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px #646cff;
+}
+
+input:checked + .slider:before {
+  transform: translateX(20px);
 }
