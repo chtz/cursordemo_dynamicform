@@ -233,6 +233,8 @@ input:checked + .slider:before {
   font-size: 14px;
   cursor: pointer;
   transition: all 0.3s;
+  touch-action: manipulation;
+  min-height: 44px;
 }
 
 .secondary-button:hover {
@@ -258,6 +260,8 @@ input:checked + .slider:before {
   font-size: 16px;
   cursor: pointer;
   transition: background-color 0.3s;
+  touch-action: manipulation;
+  min-height: 44px;
 }
 
 .primary-button:hover {
@@ -297,10 +301,13 @@ input:checked + .slider:before {
   display: flex;
   align-items: center;
   margin-right: 15px;
+  min-height: 30px;
 }
 
 .radio-option input[type="radio"] {
   margin-right: 5px;
+  min-width: 20px;
+  min-height: 20px;
 }
 
 .text-input {
@@ -312,7 +319,7 @@ input:checked + .slider:before {
   border: 1px solid #ddd;
   border-radius: 4px;
   font-family: inherit;
-  font-size: 14px;
+  font-size: 16px; /* Increased for mobile readability */
   line-height: 1.5;
   resize: vertical;
   transition: border-color 0.3s;
@@ -448,4 +455,103 @@ pre {
 .radio-option label p {
   display: inline;
   margin: 0;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+  header h1 {
+    font-size: 1.2rem;
+  }
+  
+  .header-content {
+    padding: 10px 15px;
+  }
+
+  main {
+    margin: 10px;
+    padding: 15px;
+  }
+  
+  .question-container, .form-title, .form-paragraph {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  .form-title h2 {
+    font-size: 20px;
+  }
+  
+  .question-label {
+    font-size: 16px;
+  }
+  
+  .radio-option {
+    margin-bottom: 8px;
+    width: 100%;
+  }
+
+  .button-group {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .primary-button, .secondary-button {
+    width: 100%;
+    padding: 12px 10px;
+  }
+  
+  .debug-label {
+    font-size: 0.8rem;
+  }
+  
+  .language-selector span {
+    display: none;
+  }
+  
+  .header-controls {
+    gap: 10px;
+  }
+  
+  .editor-controls {
+    flex-direction: column;
+  }
+}
+
+/* iOS specific adjustments */
+@supports (-webkit-touch-callout: none) {
+  input, 
+  textarea, 
+  button {
+    /* Disable iOS zoom on input */
+    font-size: 16px;
+  }
+  
+  .radio-option input[type="radio"] {
+    /* Fix checkbox appearance on iOS */
+    -webkit-appearance: none;
+    appearance: none;
+    background-color: #fff;
+    width: 20px;
+    height: 20px;
+    border: 1px solid #ccc;
+    border-radius: 50%;
+    outline: none;
+    position: relative;
+  }
+  
+  .radio-option input[type="radio"]:checked {
+    background-color: #646cff;
+    border-color: #646cff;
+  }
+  
+  .radio-option input[type="radio"]:checked:after {
+    content: '';
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: white;
+  }
 }
