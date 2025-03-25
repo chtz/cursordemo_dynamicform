@@ -290,3 +290,27 @@ footer {
 .read-the-docs {
   color: #888;
 }
+
+.text-input {
+  width: 100%;
+  min-height: 100px;
+  padding: 12px;
+  margin-top: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.5;
+  resize: vertical;
+  transition: border-color 0.3s;
+}
+
+.text-input:focus {
+  outline: none;
+  border-color: #646cff;
+  box-shadow: 0 0 0 3px rgba(100, 108, 255, 0.1);
+}
+
+.text-input::placeholder {
+  color: #aaa;
+}

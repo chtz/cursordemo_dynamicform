@@ -3,14 +3,36 @@ import './App.css'
 import { saveAnswers, loadAnswers, saveQuestions, loadQuestions, clearAllStoredData } from './services/answerService'
 
 function App() {
-  // Define initial questions and their possible answers
-  const initialQuestions = [
-    {"Your favourite color?": ["blue", "green", "red", "yellow"]},
-    {"Your beloved pet?": ["cat", "dog", "fish", "bird"]},
-    {"Your preferred season?": ["spring", "summer", "fall", "winter"]}
+  // Define initial form items with different types
+  const initialFormItems = [
+    {
+      type: "choice",
+      question: "Your favourite color?",
+      options: ["blue", "green", "red", "yellow"]
+    },
+    {
+      type: "choice",
+      question: "Your beloved pet?",
+      options: ["cat", "dog", "fish", "bird"]
+    },
+    {
+      type: "text",
+      question: "Tell us about your hobbies",
+      placeholder: "I enjoy..."
+    },
+    {
+      type: "choice",
+      question: "Your preferred season?",
+      options: ["spring", "summer", "fall", "winter"]
+    },
+    {
+      type: "text",
+      question: "What's your favorite travel destination?",
+      placeholder: "Enter destination and why you love it..."
+    }
   ];
   
-  const [questionsAndAnswers, setQuestionsAndAnswers] = useState(initialQuestions);
+  const [formItems, setFormItems] = useState(initialFormItems);
   const [questionsJson, setQuestionsJson] = useState('');
 
   // State to store user's answers
@@ -28,12 +50,12 @@ function App() {
         const savedQuestions = await loadQuestions();
         if (savedQuestions) {
           console.log('Loaded questions from localStorage:', savedQuestions);
-          setQuestionsAndAnswers(savedQuestions);
+          setFormItems(savedQuestions);
           setQuestionsStatus('Questions loaded successfully from localStorage');
         } else {
           console.log('No saved questions found, using initial questions');
           // No saved questions, use initial questions
-          setQuestionsAndAnswers(initialQuestions);
+          setFormItems(initialFormItems);
         }
 
         // Load answers
@@ -55,15 +77,23 @@ function App() {
   // Update questions JSON when debug mode is toggled
   useEffect(() => {
     if (debugMode) {
-      setQuestionsJson(JSON.stringify(questionsAndAnswers, null, 2));
+      setQuestionsJson(JSON.stringify(formItems, null, 2));
     }
   }, [debugMode]);
 
-  // Handle radio button change
-  const handleAnswerChange = (question, answer) => {
+  // Handle choice/radio button change
+  const handleChoiceChange = (question, answer) => {
     setUserAnswers({
       ...userAnswers,
       [question]: answer
+    });
+  };
+
+  // Handle text input change
+  const handleTextChange = (question, value) => {
+    setUserAnswers({
+      ...userAnswers,
+      [question]: value
     });
   };
 
@@ -99,7 +129,7 @@ function App() {
   // Handle saving questions
   const handleSaveQuestions = async () => {
     try {
-      await saveQuestions(questionsAndAnswers);
+      await saveQuestions(formItems);
       setQuestionsStatus('Questions saved successfully');
       setTimeout(() => setQuestionsStatus(''), 3000);
     } catch (error) {
@@ -113,13 +143,13 @@ function App() {
     try {
       const savedQuestions = await loadQuestions();
       if (savedQuestions) {
-        setQuestionsAndAnswers(savedQuestions);
+        setFormItems(savedQuestions);
         setQuestionsJson(JSON.stringify(savedQuestions, null, 2));
         setQuestionsStatus('Questions loaded successfully');
       } else {
         setQuestionsStatus('No saved questions found, using initial questions');
-        setQuestionsAndAnswers(initialQuestions);
-        setQuestionsJson(JSON.stringify(initialQuestions, null, 2));
+        setFormItems(initialFormItems);
+        setQuestionsJson(JSON.stringify(initialFormItems, null, 2));
       }
       setTimeout(() => setQuestionsStatus(''), 3000);
     } catch (error) {
@@ -135,8 +165,8 @@ function App() {
       await clearAllStoredData();
       
       // Reset questions to initial state
-      setQuestionsAndAnswers(initialQuestions);
-      setQuestionsJson(JSON.stringify(initialQuestions, null, 2));
+      setFormItems(initialFormItems);
+      setQuestionsJson(JSON.stringify(initialFormItems, null, 2));
       
       // Reset answers
       setUserAnswers({});
@@ -161,7 +191,7 @@ function App() {
     setDebugMode(!debugMode);
     if (!debugMode) {
       // When turning debug mode on, update the JSON display
-      setQuestionsJson(JSON.stringify(questionsAndAnswers, null, 2));
+      setQuestionsJson(JSON.stringify(formItems, null, 2));
     }
   };
 
@@ -173,7 +203,7 @@ function App() {
     try {
       const parsedQuestions = JSON.parse(newValue);
       if (Array.isArray(parsedQuestions)) {
-        setQuestionsAndAnswers(parsedQuestions);
+        setFormItems(parsedQuestions);
         setJsonError('');
       } else {
         setJsonError('Questions data must be an array');
@@ -192,6 +222,50 @@ function App() {
       setJsonError('');
     } catch (error) {
       setJsonError('Cannot format: Invalid JSON');
+    }
+  };
+
+  // Render a form item based on its type
+  const renderFormItem = (item, index) => {
+    switch (item.type) {
+      case 'choice':
+        return (
+          <div key={index} className="question-container">
+            <p className="question-label">{item.question}</p>
+            <div className="answer-options">
+              {item.options.map((option, optionIndex) => (
+                <div key={optionIndex} className="radio-option">
+                  <input
+                    type="radio"
+                    id={`q${index}-a${optionIndex}`}
+                    name={`question-${index}`}
+                    value={option}
+                    checked={userAnswers[item.question] === option}
+                    onChange={() => handleChoiceChange(item.question, option)}
+                  />
+                  <label htmlFor={`q${index}-a${optionIndex}`}>{option}</label>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      
+      case 'text':
+        return (
+          <div key={index} className="question-container">
+            <p className="question-label">{item.question}</p>
+            <textarea
+              className="text-input"
+              placeholder={item.placeholder || "Enter your answer..."}
+              value={userAnswers[item.question] || ''}
+              onChange={(e) => handleTextChange(item.question, e.target.value)}
+              rows={4}
+            />
+          </div>
+        );
+      
+      default:
+        return <div key={index}>Unsupported item type: {item.type}</div>;
     }
   };
 
@@ -218,7 +292,7 @@ function App() {
 
         {debugMode && (
           <div className="debug-editor">
-            <h2>Questions and Answers (Debug Mode)</h2>
+            <h2>Form Items (Debug Mode)</h2>
             <div className="editor-controls">
               <button type="button" className="secondary-button" onClick={formatJson}>Format JSON</button>
               <button type="button" className="secondary-button" onClick={handleSaveQuestions}>Save Questions</button>
@@ -237,31 +311,8 @@ function App() {
         )}
 
         <form>
-          {questionsAndAnswers.map((questionObj, qIndex) => {
-            const question = Object.keys(questionObj)[0];
-            const answers = questionObj[question];
-            
-            return (
-              <div key={qIndex} className="question-container">
-                <p className="question-label">{question}</p>
-                <div className="answer-options">
-                  {answers.map((answer, aIndex) => (
-                    <div key={aIndex} className="radio-option">
-                      <input
-                        type="radio"
-                        id={`q${qIndex}-a${aIndex}`}
-                        name={`question-${qIndex}`}
-                        value={answer}
-                        checked={userAnswers[question] === answer}
-                        onChange={() => handleAnswerChange(question, answer)}
-                      />
-                      <label htmlFor={`q${qIndex}-a${aIndex}`}>{answer}</label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            );
-          })}
+          {formItems.map((item, index) => renderFormItem(item, index))}
+          
           <div className="button-group">
             <button type="button" className="primary-button" onClick={handleSaveAnswers}>Save Answers</button>
             <button type="button" className="primary-button" onClick={handleLoadAnswers}>Load Answers</button>
