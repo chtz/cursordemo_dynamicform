@@ -26,11 +26,11 @@ function App() {
       id: "q-color",
       type: "choice",
       question: {
-        en: "Your **favourite** color?",
-        de: "Deine **Lieblingsfarbe**?"
+        en: "Your favourite color?",
+        de: "Deine Lieblingsfarbe?"
       },
       options: [
-        { id: "color-blue", en: "blue", de: "blau" },
+        { id: "color-blue", en: "**dark** blue", de: "**dunkles** blaue" },
         { id: "color-green", en: "green", de: "grün" },
         { id: "color-red", en: "red", de: "rot" },
         { id: "color-yellow", en: "yellow", de: "gelb" }
@@ -433,15 +433,33 @@ function App() {
   };
 
   // Enhanced Text component that supports markdown
-  const MarkdownText = ({ text, className }) => {
+  const MarkdownText = ({ text, className, noParagraph }) => {
+    // Define components object based on noParagraph prop
+    const components = {
+      // Set up custom components for links to open in new tab
+      a: ({node, ...props}) => (
+        <a {...props} target="_blank" rel="noopener noreferrer" />
+      )
+    };
+    
+    // Only add paragraph component replacement if noParagraph is true
+    if (noParagraph) {
+      components.p = ({node, children, ...props}) => <span {...props}>{children}</span>;
+    }
+    
+    // When noParagraph is true, don't wrap in a div to avoid nesting div inside p
+    if (noParagraph) {
+      return (
+        <ReactMarkdown components={components}>
+          {text}
+        </ReactMarkdown>
+      );
+    }
+    
+    // Otherwise, use a div wrapper with the className
     return (
       <div className={className}>
-        <ReactMarkdown components={{
-          // Set up custom components for links to open in new tab
-          a: ({node, ...props}) => (
-            <a {...props} target="_blank" rel="noopener noreferrer" />
-          )
-        }}>
+        <ReactMarkdown components={components}>
           {text}
         </ReactMarkdown>
       </div>
@@ -451,7 +469,7 @@ function App() {
   // Render a form item based on its type
   const renderFormItem = (item, index) => {
     const hasError = validationErrors[item.id];
-
+    
     switch (item.type) {
       case 'title':
         return (
@@ -461,18 +479,18 @@ function App() {
             </h2>
           </div>
         );
-
+        
       case 'text':
         // If it has a question property, it's an input field
         if (item.question) {
           return (
-            <div
-              key={index}
+            <div 
+              key={index} 
               className={`question-container ${hasError ? 'has-error' : ''}`}
               data-question={item.id}
             >
               <p className="question-label">
-                <MarkdownText text={getText(item.question)} />
+                <MarkdownText text={getText(item.question)} noParagraph={true} />
                 <span className="required-indicator">{uiTranslations[language].required}</span>
               </p>
               <textarea
@@ -498,23 +516,23 @@ function App() {
             </div>
           );
         }
-
+      
       case 'choice':
         return (
-          <div
-            key={index}
+          <div 
+            key={index} 
             className={`question-container ${hasError ? 'has-error' : ''}`}
             data-question={item.id}
           >
             <p className="question-label">
-              <MarkdownText text={getText(item.question)} />
+              <MarkdownText text={getText(item.question)} noParagraph={true} />
               <span className="required-indicator">{uiTranslations[language].required}</span>
             </p>
             <div className="answer-options">
               {item.options.map((option, optionIndex) => {
                 const optionValue = getText(option);
                 const optionId = option.id;
-
+                
                 return (
                   <div key={optionIndex} className="radio-option">
                     <input
@@ -527,7 +545,7 @@ function App() {
                       required
                     />
                     <label htmlFor={`q${index}-a${optionIndex}`}>
-                      <MarkdownText text={optionValue} />
+                      <MarkdownText text={optionValue} noParagraph={true} />
                     </label>
                   </div>
                 );
@@ -536,7 +554,7 @@ function App() {
             {hasError && <div className="validation-error">{validationErrors[item.id]}</div>}
           </div>
         );
-
+      
       default:
         return <div key={index}>Unsupported item type: {item.type}</div>;
     }
