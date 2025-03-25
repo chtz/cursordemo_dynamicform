@@ -4,16 +4,18 @@ import { saveAnswers, loadAnswers } from './services/answerService'
 
 function App() {
   // Define questions and their possible answers
-  const questionsAndAnswers = [
+  const [questionsAndAnswers, setQuestionsAndAnswers] = useState([
     {"Your favourite color?": ["blue", "green", "red", "yellow"]},
     {"Your beloved pet?": ["cat", "dog", "fish", "bird"]},
     {"Your preferred season?": ["spring", "summer", "fall", "winter"]}
-  ];
+  ]);
+  const [questionsJson, setQuestionsJson] = useState('');
 
   // State to store user's answers
   const [userAnswers, setUserAnswers] = useState({});
   const [saveStatus, setSaveStatus] = useState('');
   const [debugMode, setDebugMode] = useState(false);
+  const [jsonError, setJsonError] = useState('');
 
   // Load answers from storage when component mounts
   useEffect(() => {
@@ -32,6 +34,13 @@ function App() {
     
     fetchAnswers();
   }, []);
+
+  // Update questions JSON when debug mode is enabled
+  useEffect(() => {
+    if (debugMode) {
+      setQuestionsJson(JSON.stringify(questionsAndAnswers, null, 2));
+    }
+  }, [debugMode, questionsAndAnswers]);
 
   // Handle radio button change
   const handleAnswerChange = (question, answer) => {
@@ -75,6 +84,35 @@ function App() {
     setDebugMode(!debugMode);
   };
 
+  // Handle questions JSON edit
+  const handleQuestionsJsonChange = (e) => {
+    const newValue = e.target.value;
+    setQuestionsJson(newValue);
+    
+    try {
+      const parsedQuestions = JSON.parse(newValue);
+      if (Array.isArray(parsedQuestions)) {
+        setQuestionsAndAnswers(parsedQuestions);
+        setJsonError('');
+      } else {
+        setJsonError('Questions data must be an array');
+      }
+    } catch (error) {
+      setJsonError('Invalid JSON format');
+    }
+  };
+
+  // Format JSON in the textarea
+  const formatJson = () => {
+    try {
+      const parsedJson = JSON.parse(questionsJson);
+      setQuestionsJson(JSON.stringify(parsedJson, null, 2));
+      setJsonError('');
+    } catch (error) {
+      setJsonError('Cannot format: Invalid JSON');
+    }
+  };
+
   return (
     <div className="container">
       <header>
@@ -95,6 +133,22 @@ function App() {
             </div>
           </label>
         </div>
+
+        {debugMode && (
+          <div className="debug-editor">
+            <h2>Questions and Answers (Debug Mode)</h2>
+            <div className="editor-controls">
+              <button type="button" className="secondary-button" onClick={formatJson}>Format JSON</button>
+            </div>
+            <textarea 
+              className={`json-editor ${jsonError ? 'json-error' : ''}`}
+              value={questionsJson}
+              onChange={handleQuestionsJsonChange}
+              rows={10}
+            />
+            {jsonError && <div className="error-message">{jsonError}</div>}
+          </div>
+        )}
 
         <form>
           {questionsAndAnswers.map((questionObj, qIndex) => {
