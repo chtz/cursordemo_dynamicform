@@ -170,6 +170,8 @@ input:checked + .slider:before {
   margin-bottom: 25px;
   padding-bottom: 15px;
   border-bottom: 1px solid #eee;
+  padding-left: 20px;
+  padding-right: 20px;
 }
 
 .question-label {
@@ -183,6 +185,7 @@ input:checked + .slider:before {
   display: flex;
   flex-wrap: wrap;
   gap: 15px;
+  padding-left: 0;
 }
 
 .radio-option {
@@ -292,10 +295,12 @@ footer {
 }
 
 .text-input {
-  width: 100%;
+  width: calc(100% - 24px);
+  margin-left: auto;
+  margin-right: auto;
+  display: block;
   min-height: 100px;
   padding: 12px;
-  margin-top: 8px;
   border: 1px solid #ddd;
   border-radius: 4px;
   font-family: inherit;
@@ -349,6 +354,8 @@ footer {
   margin: 30px 0 15px;
   border-bottom: 2px solid #646cff;
   padding-bottom: 8px;
+  padding-left: 20px;
+  padding-right: 20px;
 }
 
 .form-title:first-child {
@@ -365,6 +372,8 @@ footer {
   margin-bottom: 20px;
   color: #666;
   line-height: 1.6;
+  padding-left: 20px;
+  padding-right: 20px;
 }
 
 .form-paragraph p {
