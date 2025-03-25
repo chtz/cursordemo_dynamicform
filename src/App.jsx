@@ -6,6 +6,14 @@ function App() {
   // Define initial form items with different types
   const initialFormItems = [
     {
+      type: "title",
+      content: "Personal Preferences"
+    },
+    {
+      type: "text",
+      content: "Please tell us about your preferences to help us personalize your experience."
+    },
+    {
       type: "choice",
       question: "Your favourite color?",
       options: ["blue", "green", "red", "yellow"]
@@ -16,9 +24,21 @@ function App() {
       options: ["cat", "dog", "fish", "bird"]
     },
     {
+      type: "title",
+      content: "About You"
+    },
+    {
+      type: "text",
+      content: "We'd like to know more about your interests and experiences."
+    },
+    {
       type: "text",
       question: "Tell us about your hobbies",
       placeholder: "I enjoy..."
+    },
+    {
+      type: "title",
+      content: "Travel & Seasons"
     },
     {
       type: "choice",
@@ -121,6 +141,11 @@ function App() {
     let isValid = true;
     
     formItems.forEach(item => {
+      // Skip validation for non-input items
+      if (item.type === 'title' || (item.type === 'text' && !item.question)) {
+        return;
+      }
+      
       const answer = userAnswers[item.question];
       
       // Check if answer exists and is not empty
@@ -294,9 +319,50 @@ function App() {
 
   // Render a form item based on its type
   const renderFormItem = (item, index) => {
-    const hasError = validationErrors[item.question];
+    const hasError = item.question && validationErrors[item.question];
     
     switch (item.type) {
+      case 'title':
+        return (
+          <div key={index} className="form-title">
+            <h2>{item.content}</h2>
+          </div>
+        );
+        
+      case 'text':
+        // If it has a question property, it's an input field
+        if (item.question) {
+          return (
+            <div 
+              key={index} 
+              className={`question-container ${hasError ? 'has-error' : ''}`}
+              data-question={item.question}
+            >
+              <p className="question-label">
+                {item.question}
+                <span className="required-indicator">*</span>
+              </p>
+              <textarea
+                className="text-input"
+                placeholder={item.placeholder || "Enter your answer..."}
+                value={userAnswers[item.question] || ''}
+                onChange={(e) => handleTextChange(item.question, e.target.value)}
+                rows={4}
+                required
+                minLength={1}
+              />
+              {hasError && <div className="validation-error">{validationErrors[item.question]}</div>}
+            </div>
+          );
+        } else {
+          // If it only has content, it's a display paragraph
+          return (
+            <div key={index} className="form-paragraph">
+              <p>{item.content}</p>
+            </div>
+          );
+        }
+      
       case 'choice':
         return (
           <div 
@@ -324,30 +390,6 @@ function App() {
                 </div>
               ))}
             </div>
-            {hasError && <div className="validation-error">{validationErrors[item.question]}</div>}
-          </div>
-        );
-      
-      case 'text':
-        return (
-          <div 
-            key={index} 
-            className={`question-container ${hasError ? 'has-error' : ''}`}
-            data-question={item.question}
-          >
-            <p className="question-label">
-              {item.question}
-              <span className="required-indicator">*</span>
-            </p>
-            <textarea
-              className="text-input"
-              placeholder={item.placeholder || "Enter your answer..."}
-              value={userAnswers[item.question] || ''}
-              onChange={(e) => handleTextChange(item.question, e.target.value)}
-              rows={4}
-              required
-              minLength={1}
-            />
             {hasError && <div className="validation-error">{validationErrors[item.question]}</div>}
           </div>
         );

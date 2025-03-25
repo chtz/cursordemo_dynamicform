@@ -344,3 +344,29 @@ footer {
   background-color: #fff1f0;
   border-left-color: #ff4d4f;
 }
+
+.form-title {
+  margin: 30px 0 15px;
+  border-bottom: 2px solid #646cff;
+  padding-bottom: 8px;
+}
+
+.form-title:first-child {
+  margin-top: 0;
+}
+
+.form-title h2 {
+  font-size: 22px;
+  color: #333;
+  margin: 0;
+}
+
+.form-paragraph {
+  margin-bottom: 20px;
+  color: #666;
+  line-height: 1.6;
+}
+
+.form-paragraph p {
+  margin: 0;
+}
