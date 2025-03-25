@@ -1,36 +1,45 @@
-# React + Vite
+# Dynamic Form Application
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This interactive form application was created **entirely by AI** using Cursor IDE powered by Claude 3.7 Sonnet. No human-written code was involved, including this README.
 
-Currently, two official plugins are available:
+> **Note**: This is a demonstration project only and should not be used in production environments.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Features
 
-## Mobile Responsive Features
-
-This application includes mobile-friendly optimizations:
-- Responsive layout for different screen sizes
-- Mobile-optimized touch targets (44px minimum)
-- Proper iOS form handling
-- Home screen app capabilities
+- **Form Functionality**
+  - Multi-language support (English/Spanish)
+  - Various input types (radio selection, multiline text, display elements)
+  - Form validation
+  - Debug mode for form editing and JSON manipulation
+  
+- **Responsive Design**
+  - Mobile-optimized layout and touch targets (44px minimum)
+  - iOS home screen capability
+  - Consistent light theme regardless of system preferences
 
 ## Generating App Icons
 
-To generate proper PNG icons from the SVG template:
+To generate PNG icons from the SVG template:
 
-1. Install the required dependency:
-   ```
-   npm install sharp
-   ```
+1. Install dependency: `npm install sharp`
+2. Run script: `node public/generate-icons.js`
 
-2. Run the icon generation script:
-   ```
-   node public/generate-icons.js
-   ```
+This creates all necessary icon sizes for web and mobile platforms.
 
-This will create all the necessary icon sizes for web and mobile platforms.
+## Development
 
-## Expanding the ESLint configuration
+```
+npm install
+npm run dev
+```
 
-If you are developing a production application, we recommend using TypeScript and enable type-aware lint rules. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## AI Development Process
+
+This project demonstrates how AI can create a full-featured web application with:
+- Form handling and validation
+- State management
+- Mobile/responsive optimizations
+- Accessibility considerations
+- Cross-platform compatibility
+
+The entire development process was guided through conversation with Claude 3.7 Sonnet in Cursor.
