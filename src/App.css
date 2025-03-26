@@ -220,6 +220,7 @@ input:checked + .slider:before {
   background-color: #ffffff;
   color: #333333;
   resize: vertical;
+  box-sizing: border-box;
 }
 
 .json-editor.json-error {
@@ -432,6 +433,8 @@ pre {
   overflow-x: auto;
   border: 1px solid #ddd;
   color: #333333;
+  box-sizing: border-box;
+  width: 100%;
 }
 
 /* Markdown styling */
