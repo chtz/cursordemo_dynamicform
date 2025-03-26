@@ -28,7 +28,6 @@ const Header = ({
       <div className="header-content">
         <h1>{title}</h1>
         <div className="header-controls">
-          <AuthButton translations={uiTranslations[language]} />
           <div className="debug-control">
             <label htmlFor="debug-toggle" className="debug-label">
               {uiTranslations[language].debugMode}
@@ -48,6 +47,7 @@ const Header = ({
             translations={uiTranslations[language]} 
             onChange={handleLanguageChange} 
           />
+          <AuthButton translations={uiTranslations[language]} />
         </div>
       </div>
     </header>
