@@ -51,6 +51,13 @@ The application follows a component-based architecture with clear separation of 
 - **Controlled Components**: All form inputs are React controlled components for predictable behavior
 - **Optimistic Updates**: UI feedback is provided immediately, with async operations handled in the background
 
+### Debug Mode & JSON Editing
+
+- **Free-form Text Editing**: JSON can be edited with full control over spacing, line breaks, and formatting
+- **Live Preview with Manual Control**: Changes to the form preview happen in real-time when JSON is valid, without affecting the text formatting
+- **Explicit Formatting Control**: JSON is only pretty-printed when the user explicitly requests formatting
+- **State Decoupling**: Uses a reference flag to break circular state dependencies between the JSON editor and the form preview
+
 ### UX/UI Considerations
 
 - **Progressive Enhancement**: Core functionality works without JavaScript, enhanced with React
@@ -75,6 +82,16 @@ The application follows a component-based architecture with clear separation of 
 - **Local Storage**: For offline capability with structured data format
 - **Serialization**: Consistent serialization/deserialization of form data
 - **Version Handling**: Support for legacy data formats for backward compatibility
+
+### Trade-offs and Considerations
+
+- **JSON Editor Circular Dependency**: We implemented a flag-based mechanism to break the circular dependency between form state and editor state, prioritizing user control while maintaining live updates
+- **useRef vs. useState**: We chose useRef for the editing flag since it doesn't trigger re-renders and allows for synchronization across effect boundaries
+- **Delayed Flag Reset**: We use setTimeout with 0ms delay to ensure React rendering completes before clearing flags, avoiding race conditions
+- **Error Handling Strategy**: We chose to show validation errors without blocking edits to allow users to work through problems
+- **Performance vs. Simplicity**: We opted for simplicity in the form generation rather than optimizing for large forms
+- **Bundle Size vs. Features**: We included Markdown support for rich text despite the increased bundle size
+- **UI Component Structure**: We chose to keep tight coupling between language selection and the rest of the UI for simplicity rather than extracting an advanced I18N system
 
 These decisions prioritize maintainability, extensibility, and user experience. Future development should respect these patterns for consistency.
 

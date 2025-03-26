@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { loadAnswers, saveAnswers, loadQuestions, saveQuestions, clearAllStoredData } from '../services/answerService';
 import { initialFormItems, DEFAULT_LANGUAGE } from '../constants';
 import { validateForm } from '../utils/formUtils';
@@ -20,6 +20,10 @@ export const useFormState = () => {
   const [jsonError, setJsonError] = useState('');
   const [validationErrors, setValidationErrors] = useState({});
   const [language, setLanguage] = useState(DEFAULT_LANGUAGE);
+  
+  // Flag to prevent form items from updating the JSON text 
+  // This breaks the circular dependency between form items and JSON text
+  const isEditing = useRef(false);
 
   // Helper function to get text in current language
   const getText = (textObj) => {
@@ -66,9 +70,10 @@ export const useFormState = () => {
     fetchData();
   }, []);
 
-  // Update questions JSON when debug mode is toggled
+  // Update questions JSON when debug mode is toggled or when form items change,
+  // but only if we're not actively editing
   useEffect(() => {
-    if (debugMode) {
+    if (debugMode && !isEditing.current) {
       setQuestionsJson(JSON.stringify(formItems, null, 2));
     }
   }, [debugMode, formItems]);
@@ -190,10 +195,70 @@ export const useFormState = () => {
     }
   };
 
+  // Handle questions JSON edit
+  const handleQuestionsJsonChange = (e) => {
+    // Set editing flag to prevent the effect from overriding
+    isEditing.current = true;
+    
+    const newValue = e.target.value;
+    // Always update the displayed JSON text with exactly what user typed
+    setQuestionsJson(newValue);
+
+    try {
+      // Try to parse the JSON
+      const parsedQuestions = JSON.parse(newValue);
+      
+      // If valid JSON array, update form items silently
+      if (Array.isArray(parsedQuestions)) {
+        setFormItems(parsedQuestions);
+        setJsonError('');
+      } else {
+        setJsonError('Questions data must be an array');
+      }
+    } catch (error) {
+      // Only show error, don't update the form if JSON is invalid
+      setJsonError('Invalid JSON format');
+    }
+    
+    // Clear the editing flag after a short delay
+    // This allows React to complete the current render cycle
+    setTimeout(() => {
+      isEditing.current = false;
+    }, 0);
+  };
+
+  // Format JSON in the textarea (explicit user action)
+  const formatJson = () => {
+    try {
+      const parsedJson = JSON.parse(questionsJson);
+      
+      // Only format on explicit user action
+      isEditing.current = true;
+      setQuestionsJson(JSON.stringify(parsedJson, null, 2));
+      setJsonError('');
+      
+      // Clear the editing flag after this operation
+      setTimeout(() => {
+        isEditing.current = false;
+      }, 0);
+    } catch (error) {
+      setJsonError('Cannot format: Invalid JSON');
+    }
+  };
+
   // Handle saving questions
   const handleSaveQuestions = async () => {
     try {
-      await saveQuestions(formItems);
+      // First try to ensure we have valid JSON
+      const parsedQuestions = JSON.parse(questionsJson);
+      if (!Array.isArray(parsedQuestions)) {
+        setJsonError('Questions data must be an array');
+        return;
+      }
+      
+      // Update form items and save them
+      setFormItems(parsedQuestions);
+      await saveQuestions(parsedQuestions);
       setTimedStatus(setQuestionsStatus, uiTranslations[language].savedSuccessfully);
     } catch (error) {
       setTimedStatus(
@@ -208,13 +273,27 @@ export const useFormState = () => {
     try {
       const savedQuestions = await loadQuestions();
       if (savedQuestions) {
+        // Set editing flag to prevent effect from overriding
+        isEditing.current = true;
+        
         setFormItems(savedQuestions);
         setQuestionsJson(JSON.stringify(savedQuestions, null, 2));
         setTimedStatus(setQuestionsStatus, uiTranslations[language].loadedSuccessfully);
+        
+        // Clear the editing flag after operation
+        setTimeout(() => {
+          isEditing.current = false;
+        }, 0);
       } else {
         setTimedStatus(setQuestionsStatus, uiTranslations[language].noSavedAnswers);
+        
+        isEditing.current = true;
         setFormItems(initialFormItems);
         setQuestionsJson(JSON.stringify(initialFormItems, null, 2));
+        
+        setTimeout(() => {
+          isEditing.current = false;
+        }, 0);
       }
 
       // Reset validation errors when questions change
@@ -234,8 +313,13 @@ export const useFormState = () => {
       await clearAllStoredData();
 
       // Reset questions to initial state
+      isEditing.current = true;
       setFormItems(initialFormItems);
       setQuestionsJson(JSON.stringify(initialFormItems, null, 2));
+      
+      setTimeout(() => {
+        isEditing.current = false;
+      }, 0);
 
       // Reset answers
       setUserAnswers({ language, answers: {} });
@@ -262,37 +346,12 @@ export const useFormState = () => {
     setDebugMode(!debugMode);
     if (!debugMode) {
       // When turning debug mode on, update the JSON display
+      isEditing.current = true;
       setQuestionsJson(JSON.stringify(formItems, null, 2));
-    }
-  };
-
-  // Handle questions JSON edit
-  const handleQuestionsJsonChange = (e) => {
-    const newValue = e.target.value;
-    setQuestionsJson(newValue);
-
-    try {
-      const parsedQuestions = JSON.parse(newValue);
-      if (Array.isArray(parsedQuestions)) {
-        setFormItems(parsedQuestions);
-        setJsonError('');
-      } else {
-        setJsonError('Questions data must be an array');
-      }
-    } catch (error) {
-      // Only show error, don't update the form if JSON is invalid
-      setJsonError('Invalid JSON format');
-    }
-  };
-
-  // Format JSON in the textarea
-  const formatJson = () => {
-    try {
-      const parsedJson = JSON.parse(questionsJson);
-      setQuestionsJson(JSON.stringify(parsedJson, null, 2));
-      setJsonError('');
-    } catch (error) {
-      setJsonError('Cannot format: Invalid JSON');
+      
+      setTimeout(() => {
+        isEditing.current = false;
+      }, 0);
     }
   };
 
