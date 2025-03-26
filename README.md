@@ -35,6 +35,49 @@ npm install
 npm run dev
 ```
 
+## Design Decisions and Architecture
+
+The application follows a component-based architecture with clear separation of concerns, designed with the following principles in mind:
+
+### Component Structure
+
+- **Modular Components**: Each UI component is isolated in its own file for better maintainability and reusability
+- **Presentational vs. Container Components**: UI components (like FormItem, MarkdownText) are separated from stateful logic (in hooks)
+- **Single Responsibility**: Components handle one concern, improving testability and reducing complexity
+
+### State Management
+
+- **Custom Hooks**: Form state and related behaviors are encapsulated in custom hooks (`useFormState`)
+- **Controlled Components**: All form inputs are React controlled components for predictable behavior
+- **Optimistic Updates**: UI feedback is provided immediately, with async operations handled in the background
+
+### UX/UI Considerations
+
+- **Progressive Enhancement**: Core functionality works without JavaScript, enhanced with React
+- **Accessible Design**: ARIA attributes, semantic HTML, and keyboard navigation support
+- **Responsive Approach**: Mobile-first design with flexbox layout and appropriate touch targets
+- **Error Handling**: Clear validation feedback with visual indicators and focus management
+
+### Localization/Internationalization
+
+- **Text Content Separation**: All UI text is extracted into translation objects
+- **Language Switching**: Real-time language switching without page reload
+- **Content Structure**: Translation keys maintain consistent structure across languages
+
+### Data Flow
+
+- **Unidirectional Data Flow**: Changes propagate from parent components to children
+- **Props for Configuration**: Components receive their configuration through props
+- **Events for Communication**: Child components emit events rather than modifying parent state directly
+
+### Storage Strategy
+
+- **Local Storage**: For offline capability with structured data format
+- **Serialization**: Consistent serialization/deserialization of form data
+- **Version Handling**: Support for legacy data formats for backward compatibility
+
+These decisions prioritize maintainability, extensibility, and user experience. Future development should respect these patterns for consistency.
+
 ## AI Development Process
 
 This project demonstrates how AI can create a full-featured web application with:
