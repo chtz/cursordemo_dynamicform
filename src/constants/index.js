@@ -17,53 +17,61 @@ export const DEFAULT_LANGUAGE = 'en';
  */
 export const initialFormItems = [
   {
-    id: "section-preferences",
-    type: FORM_ITEM_TYPES.TITLE,
-    content: {
-      en: "Personal Preferences",
-      de: "Persönliche Präferenzen"
+    "id": "a",
+    "type": "title",
+    "content": {
+      "en": "Welcome to DynamicForm",
+      "de": "Willkommen bei DynamicForm"
     }
   },
   {
-    id: "text-preferences-intro",
-    type: FORM_ITEM_TYPES.TEXT,
-    content: {
-      en: "Please tell us about your **preferences** to help us personalize your experience. See our [privacy policy](https://example.com/privacy) for more information.",
-      de: "Bitte teilen Sie uns Ihre **Präferenzen** mit, damit wir Ihr Erlebnis personalisieren können. Lesen Sie unsere [Datenschutzrichtlinie](https://example.com/privacy) für weitere Informationen."
+    "id": "b",
+    "type": "text",
+    "content": {
+      "en": "Please log in so that your answers can be saved. If you do not yet have an account, you can create one during the registration process.",
+      "de": "Bitte melden Sie sich an, damit Ihre Antworten gespeichert werden können. Wenn Sie noch kein Konto haben, können Sie sich während des Anmeldevorgangs ein Konto einrichten."
     }
   },
   {
-    id: "q-color",
-    type: FORM_ITEM_TYPES.CHOICE,
-    question: {
-      en: "Your favourite color?",
-      de: "Deine Lieblingsfarbe?"
+    "id": "c",
+    "type": "choice",
+    "question": {
+      "en": "DynamicForm supports...",
+      "de": "DynamicForm unterstützt ..."
     },
-    options: [
-      { id: "color-blue", en: "**dark** blue", de: "**dunkles** blaue" },
-      { id: "color-green", en: "green", de: "grün" },
-      { id: "color-red", en: "red", de: "rot" },
-      { id: "color-yellow", en: "yellow", de: "gelb" }
+    "options": [
+      {
+        "id": "d",
+        "en": "... questions where the user can choose from a given list of answers",
+        "de": "... Fragen, bei denen der Benutzer aus einer vorgegebenen Liste von Antworten auswählen kann"
+      },
+      {
+        "id": "e",
+        "en": "... questions with free text answers",
+        "de": "... Fragen mit Freitextantworten"
+      },
+      {
+        "id": "f",
+        "en": "... section titles as styling elements",
+        "de": "... Abschnittstitel als Stilelemente"
+      },
+      {
+        "id": "g",
+        "en": "... and free text (with markdown support) as styling elements",
+        "de": "... und Freitext (mit Markdown-Unterstützung) als Stilelemente"
+      }
     ]
   },
   {
-    id: "section-travel",
-    type: FORM_ITEM_TYPES.TITLE,
-    content: {
-      en: "Travel & Seasons",
-      de: "Reisen & Jahreszeiten"
-    }
-  },
-  {
-    id: "q-travel",
-    type: FORM_ITEM_TYPES.TEXT,
-    question: {
-      en: "What's your **favorite** travel destination? Check [travel advisories](https://example.com/travel).",
-      de: "Was ist dein **Lieblings**-Reiseziel? Überprüfen Sie [Reisehinweise](https://example.com/travel)."
+    "id": "h",
+    "type": "text",
+    "question": {
+      "en": "That's it. Have fun!",
+      "de": "Das ist alles. Viel Spaß!"
     },
-    placeholder: {
-      en: "Enter destination and why you love it...",
-      de: "Geben Sie das Reiseziel ein und warum Sie es lieben..."
+    "placeholder": {
+      "en": "No input is expected, but feel free to enter text",
+      "de": "Es ist keine Eingabe erforderlich, aber Sie können gerne Text eingeben."
     }
   }
 ]; 

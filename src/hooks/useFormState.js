@@ -117,8 +117,20 @@ export const useFormState = () => {
   useEffect(() => {
     if (!auth.isAuthenticated) {
       dataFetched.current = false;
+      
+      // Reset form items and answers when user logs out
+      setFormItems(initialFormItems);
+      setUserAnswers({ language: DEFAULT_LANGUAGE, answers: {} });
+      setValidationErrors({});
+      
+      // Also reset JSON in debug mode
+      if (debugMode) {
+        withEditingState(isEditing, () => {
+          setQuestionsJson(JSON.stringify(initialFormItems, null, 2));
+        });
+      }
     }
-  }, [auth.isAuthenticated]);
+  }, [auth.isAuthenticated, debugMode]);
 
   // Set initial questions JSON when entering Debug
   useEffect(() => {
