@@ -79,19 +79,26 @@ export const safeParseJSON = (jsonString, onSuccess, onError, onNotArray) => {
 
 /**
  * Manages the editing state to prevent circular updates
+ * Uses a more efficient approach without relying on setTimeout
+ * 
  * @param {Object} editingRef - useRef object to track editing state
  * @param {Function} action - Function to execute while editing state is active
  */
 export const withEditingState = (editingRef, action) => {
+  // Only proceed if not already in editing state
+  if (editingRef.current) return;
+  
   // Set editing flag to prevent effects from overriding
   editingRef.current = true;
   
-  // Execute the action
-  action();
-  
-  // Clear the editing flag after a short delay
-  // This allows React to complete the current render cycle
-  setTimeout(() => {
-    editingRef.current = false;
-  }, 0);
+  try {
+    // Execute the action
+    action();
+  } finally {
+    // Use requestAnimationFrame which is more React-friendly than setTimeout
+    // This ensures the flag is reset after the current render cycle is complete
+    requestAnimationFrame(() => {
+      editingRef.current = false;
+    });
+  }
 }; 

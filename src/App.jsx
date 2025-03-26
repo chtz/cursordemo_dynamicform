@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, memo } from 'react';
 import './App.css';
 import { useFormState } from './hooks/useFormState';
 import { uiTranslations } from './translations';
@@ -7,6 +7,13 @@ import Footer from './components/Footer';
 import DynamicForm from './components/DynamicForm';
 import DebugEditor from './components/DebugEditor';
 import DebugResults from './components/DebugResults';
+
+// Memoize components to prevent unnecessary re-renders
+const MemoizedHeader = memo(Header);
+const MemoizedFooter = memo(Footer);
+const MemoizedDynamicForm = memo(DynamicForm);
+const MemoizedDebugEditor = memo(DebugEditor);
+const MemoizedDebugResults = memo(DebugResults);
 
 /**
  * Main application component
@@ -41,7 +48,7 @@ function App() {
 
   return (
     <div id="app-wrapper">
-      <Header
+      <MemoizedHeader
         title={uiTranslations[language].title}
         debugMode={debugMode}
         toggleDebugMode={toggleDebugMode}
@@ -53,7 +60,7 @@ function App() {
       <div className="container">
         <main>
           {debugMode && (
-            <DebugEditor
+            <MemoizedDebugEditor
               questionsJson={questionsJson}
               jsonError={jsonError}
               questionsStatus={questionsStatus}
@@ -67,7 +74,7 @@ function App() {
             />
           )}
 
-          <DynamicForm
+          <MemoizedDynamicForm
             formItems={formItems}
             userAnswers={userAnswers}
             validationErrors={validationErrors}
@@ -82,7 +89,7 @@ function App() {
           />
 
           {debugMode && (
-            <DebugResults
+            <MemoizedDebugResults
               userAnswers={userAnswers}
               uiTranslations={uiTranslations}
               language={language}
@@ -91,7 +98,7 @@ function App() {
         </main>
       </div>
       
-      <Footer
+      <MemoizedFooter
         footerText={uiTranslations[language].footer}
       />
     </div>
