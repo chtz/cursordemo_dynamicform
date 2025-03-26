@@ -1,10 +1,24 @@
 /**
+ * Form item types
+ */
+export const FORM_ITEM_TYPES = {
+  TITLE: 'title',
+  TEXT: 'text',
+  CHOICE: 'choice'
+};
+
+/**
+ * Default language for the application
+ */
+export const DEFAULT_LANGUAGE = 'en';
+
+/**
  * Initial form items with different types, language support, and identifiers
  */
 export const initialFormItems = [
   {
     id: "section-preferences",
-    type: "title",
+    type: FORM_ITEM_TYPES.TITLE,
     content: {
       en: "Personal Preferences",
       de: "Persönliche Präferenzen"
@@ -12,7 +26,7 @@ export const initialFormItems = [
   },
   {
     id: "text-preferences-intro",
-    type: "text",
+    type: FORM_ITEM_TYPES.TEXT,
     content: {
       en: "Please tell us about your **preferences** to help us personalize your experience. See our [privacy policy](https://example.com/privacy) for more information.",
       de: "Bitte teilen Sie uns Ihre **Präferenzen** mit, damit wir Ihr Erlebnis personalisieren können. Lesen Sie unsere [Datenschutzrichtlinie](https://example.com/privacy) für weitere Informationen."
@@ -20,7 +34,7 @@ export const initialFormItems = [
   },
   {
     id: "q-color",
-    type: "choice",
+    type: FORM_ITEM_TYPES.CHOICE,
     question: {
       en: "Your favourite color?",
       de: "Deine Lieblingsfarbe?"
@@ -34,7 +48,7 @@ export const initialFormItems = [
   },
   {
     id: "section-travel",
-    type: "title",
+    type: FORM_ITEM_TYPES.TITLE,
     content: {
       en: "Travel & Seasons",
       de: "Reisen & Jahreszeiten"
@@ -42,7 +56,7 @@ export const initialFormItems = [
   },
   {
     id: "q-travel",
-    type: "text",
+    type: FORM_ITEM_TYPES.TEXT,
     question: {
       en: "What's your **favorite** travel destination? Check [travel advisories](https://example.com/travel).",
       de: "Was ist dein **Lieblings**-Reiseziel? Überprüfen Sie [Reisehinweise](https://example.com/travel)."
@@ -52,18 +66,4 @@ export const initialFormItems = [
       de: "Geben Sie das Reiseziel ein und warum Sie es lieben..."
     }
   }
-];
-
-/**
- * Default language for the application
- */
-export const DEFAULT_LANGUAGE = 'en';
-
-/**
- * Form item types
- */
-export const FORM_ITEM_TYPES = {
-  TITLE: 'title',
-  TEXT: 'text',
-  CHOICE: 'choice'
-}; 
+]; 

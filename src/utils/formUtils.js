@@ -1,3 +1,5 @@
+import { FORM_ITEM_TYPES } from '../constants';
+
 /**
  * Find a question item by its ID
  * @param {Array} formItems - The list of form items
@@ -33,7 +35,7 @@ export const validateForm = (formItems, userAnswers, translations, language) => 
 
   formItems.forEach(item => {
     // Skip validation for non-input items
-    if (item.type === 'title' || (item.type === 'text' && !item.question)) {
+    if (item.type === FORM_ITEM_TYPES.TITLE || (item.type === FORM_ITEM_TYPES.TEXT && !item.question)) {
       return;
     }
 

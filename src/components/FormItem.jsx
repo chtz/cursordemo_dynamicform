@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import MarkdownText from './MarkdownText';
+import { FORM_ITEM_TYPES } from '../constants';
 
 /**
  * Renders a form item based on its type
@@ -29,7 +30,7 @@ const FormItem = ({
   const hasError = validationErrors[item.id];
   
   switch (item.type) {
-    case 'title':
+    case FORM_ITEM_TYPES.TITLE:
       return (
         <div key={index} className="form-title">
           <h2>
@@ -38,7 +39,7 @@ const FormItem = ({
         </div>
       );
       
-    case 'text':
+    case FORM_ITEM_TYPES.TEXT:
       // If it has a question property, it's an input field
       if (item.question) {
         return (
@@ -74,7 +75,7 @@ const FormItem = ({
         );
       }
     
-    case 'choice':
+    case FORM_ITEM_TYPES.CHOICE:
       return (
         <div 
           className={`question-container ${hasError ? 'has-error' : ''}`}
