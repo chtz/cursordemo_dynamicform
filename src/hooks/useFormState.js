@@ -38,6 +38,9 @@ export const useFormState = () => {
   // Flag to prevent form items from updating the JSON text 
   // This breaks the circular dependency between form items and JSON text
   const isEditing = useRef(false);
+  
+  // Track if we've already fetched data to avoid duplicate fetches
+  const dataFetched = useRef(false);
 
   /**
    * Helper function to get text in current language with fallback to English
@@ -57,29 +60,48 @@ export const useFormState = () => {
     return null;
   }, [auth.isAuthenticated, auth.user]);
 
-  // Load questions and answers from storage when component mounts
+  // Check if auth is ready (not loading)
+  const isAuthReady = useCallback(() => {
+    return !auth.isLoading;
+  }, [auth.isLoading]);
+
+  // Load questions and answers from storage when authentication is ready
   useEffect(() => {
+    // Only proceed if auth state is fully initialized (not loading)
+    if (!isAuthReady() || dataFetched.current) {
+      return;
+    }
+
     const fetchData = async () => {
       try {
-        const accessToken = getAccessToken();
-        
-        // Load questions
-        const savedQuestions = await loadQuestions(accessToken);
-        if (savedQuestions) {
-          setFormItems(savedQuestions);
-        }
+        // Only fetch data if authenticated and we have a token
+        if (auth.isAuthenticated) {
+          const accessToken = getAccessToken();
+          if (!accessToken) {
+            return;
+          }
 
-        // Load answers
-        const savedAnswers = await loadAnswers(accessToken);
-        if (savedAnswers) {
-          // Check if answers are in the new format (with language)
-          if (savedAnswers.language && savedAnswers.answers) {
-            setUserAnswers(savedAnswers);
-            // Set the language based on saved preference
-            setLanguage(savedAnswers.language);
-          } else {
-            // Handle legacy format
-            setUserAnswers(prev => ({ ...prev, answers: savedAnswers }));
+          console.log('Fetching data with access token');
+          dataFetched.current = true;
+          
+          // Load questions
+          const savedQuestions = await loadQuestions(accessToken);
+          if (savedQuestions) {
+            setFormItems(savedQuestions);
+          }
+
+          // Load answers
+          const savedAnswers = await loadAnswers(accessToken);
+          if (savedAnswers) {
+            // Check if answers are in the new format (with language)
+            if (savedAnswers.language && savedAnswers.answers) {
+              setUserAnswers(savedAnswers);
+              // Set the language based on saved preference
+              setLanguage(savedAnswers.language);
+            } else {
+              // Handle legacy format
+              setUserAnswers(prev => ({ ...prev, answers: savedAnswers }));
+            }
           }
         }
       } catch (error) {
@@ -88,7 +110,15 @@ export const useFormState = () => {
     };
 
     fetchData();
-  }, [getAccessToken]); // Re-fetch when auth state changes
+  }, [auth.isAuthenticated, getAccessToken, isAuthReady]);
+  
+  // Reset the dataFetched flag when auth state changes 
+  // This allows refetching data when user logs in
+  useEffect(() => {
+    if (!auth.isAuthenticated) {
+      dataFetched.current = false;
+    }
+  }, [auth.isAuthenticated]);
 
   // Set initial questions JSON when entering Debug
   useEffect(() => {
@@ -180,15 +210,59 @@ export const useFormState = () => {
   }, [formItems, userAnswers, language]);
 
   /**
+   * Handle saving answers to storage
+   */
+  const handleSaveAnswers = useCallback(async () => {
+    try {
+      // Check if auth is loading or not authenticated
+      if (auth.isLoading) {
+        setTimedStatus(setSaveStatus, uiTranslations[language].authLoading);
+        return;
+      }
+      
+      // Check if user is authenticated
+      if (!auth.isAuthenticated) {
+        setTimedStatus(setSaveStatus, uiTranslations[language].authRequired);
+        return;
+      }
+      
+      const accessToken = getAccessToken();
+      if (!accessToken) {
+        setTimedStatus(setSaveStatus, uiTranslations[language].tokenMissing);
+        return;
+      }
+      
+      // Save both the answers and the current language
+      await saveAnswers(userAnswers, accessToken);
+      setTimedStatus(setSaveStatus, uiTranslations[language].savedSuccessfully);
+    } catch (error) {
+      setTimedStatus(setSaveStatus, uiTranslations[language].errorSaving);
+    }
+  }, [userAnswers, language, auth.isAuthenticated, auth.isLoading, getAccessToken]);
+
+  /**
    * Handle form submission
    * @param {Object} e - Form submission event
    */
   const handleSubmit = useCallback((e) => {
     e.preventDefault();
 
+    // Check if auth is loading
+    if (auth.isLoading) {
+      setTimedStatus(setSaveStatus, uiTranslations[language].authLoading);
+      return;
+    }
+
     // Check if user is authenticated
     if (!auth.isAuthenticated) {
       setTimedStatus(setSaveStatus, uiTranslations[language].authRequired);
+      return;
+    }
+
+    // Check for access token
+    const accessToken = getAccessToken();
+    if (!accessToken) {
+      setTimedStatus(setSaveStatus, uiTranslations[language].tokenMissing);
       return;
     }
 
@@ -206,35 +280,29 @@ export const useFormState = () => {
         }
       }
     }
-  }, [validateFormData, validationErrors, language, auth.isAuthenticated]);
+  }, [validateFormData, validationErrors, language, auth.isAuthenticated, auth.isLoading, getAccessToken, handleSaveAnswers]);
 
   /**
-   * Handle saving answers to localStorage
+   * Handle loading answers from storage
    */
-  const handleSaveAnswers = useCallback(async () => {
+  const handleLoadAnswers = useCallback(async () => {
     try {
-      const accessToken = getAccessToken();
+      // Check if auth is loading or not authenticated
+      if (auth.isLoading) {
+        setTimedStatus(setSaveStatus, uiTranslations[language].authLoading);
+        return;
+      }
       
-      // Check if user is authenticated
       if (!auth.isAuthenticated) {
         setTimedStatus(setSaveStatus, uiTranslations[language].authRequired);
         return;
       }
       
-      // Save both the answers and the current language
-      await saveAnswers(userAnswers, accessToken);
-      setTimedStatus(setSaveStatus, uiTranslations[language].savedSuccessfully);
-    } catch (error) {
-      setTimedStatus(setSaveStatus, uiTranslations[language].errorSaving);
-    }
-  }, [userAnswers, language, auth.isAuthenticated, getAccessToken]);
-
-  /**
-   * Handle loading answers from localStorage
-   */
-  const handleLoadAnswers = useCallback(async () => {
-    try {
       const accessToken = getAccessToken();
+      if (!accessToken) {
+        setTimedStatus(setSaveStatus, uiTranslations[language].tokenMissing);
+        return;
+      }
       
       const savedAnswers = await loadAnswers(accessToken);
       if (savedAnswers) {
@@ -257,7 +325,7 @@ export const useFormState = () => {
     } catch (error) {
       setTimedStatus(setSaveStatus, uiTranslations[language].errorLoading);
     }
-  }, [language, getAccessToken]);
+  }, [language, getAccessToken, auth.isAuthenticated, auth.isLoading]);
 
   /**
    * Handle changes to the JSON editor
@@ -310,10 +378,16 @@ export const useFormState = () => {
   }, [questionsJson]);
 
   /**
-   * Handle saving questions to localStorage
+   * Handle saving questions to storage
    * Parses and validates JSON before saving
    */
   const handleSaveQuestions = useCallback(async () => {
+    // Check if auth is loading or not authenticated
+    if (auth.isLoading) {
+      setTimedStatus(setQuestionsStatus, uiTranslations[language].authLoading);
+      return;
+    }
+    
     // Check if user is authenticated
     if (!auth.isAuthenticated) {
       setTimedStatus(setQuestionsStatus, uiTranslations[language].authRequired);
@@ -326,6 +400,10 @@ export const useFormState = () => {
       async (parsedQuestions) => {
         try {
           const accessToken = getAccessToken();
+          if (!accessToken) {
+            setTimedStatus(setQuestionsStatus, uiTranslations[language].tokenMissing);
+            return;
+          }
           
           // Update form items and save them
           setFormItems(parsedQuestions);
@@ -347,14 +425,29 @@ export const useFormState = () => {
         setJsonError(errorMsg);
       }
     );
-  }, [questionsJson, language, auth.isAuthenticated, getAccessToken]);
+  }, [questionsJson, language, auth.isAuthenticated, auth.isLoading, getAccessToken]);
 
   /**
    * Handle loading questions from localStorage
    */
   const handleLoadQuestions = useCallback(async () => {
     try {
+      // Check if auth is loading or not authenticated
+      if (auth.isLoading) {
+        setTimedStatus(setQuestionsStatus, uiTranslations[language].authLoading);
+        return;
+      }
+      
+      if (!auth.isAuthenticated) {
+        setTimedStatus(setQuestionsStatus, uiTranslations[language].authRequired);
+        return;
+      }
+      
       const accessToken = getAccessToken();
+      if (!accessToken) {
+        setTimedStatus(setQuestionsStatus, uiTranslations[language].tokenMissing);
+        return;
+      }
       
       const savedQuestions = await loadQuestions(accessToken);
       if (savedQuestions) {
@@ -380,12 +473,18 @@ export const useFormState = () => {
         `${uiTranslations[language].errorLoading}: ${error.message}`
       );
     }
-  }, [language, getAccessToken]);
+  }, [language, getAccessToken, auth.isAuthenticated, auth.isLoading]);
 
   /**
-   * Reset questions and answers to initial default and clear localStorage
+   * Reset questions and answers to initial default and clear storage
    */
   const handleResetQuestions = useCallback(async () => {
+    // Check if auth is loading or not authenticated
+    if (auth.isLoading) {
+      setTimedStatus(setQuestionsStatus, uiTranslations[language].authLoading);
+      return;
+    }
+    
     // Check if user is authenticated
     if (!auth.isAuthenticated) {
       setTimedStatus(setQuestionsStatus, uiTranslations[language].authRequired);
@@ -394,8 +493,12 @@ export const useFormState = () => {
     
     try {
       const accessToken = getAccessToken();
+      if (!accessToken) {
+        setTimedStatus(setQuestionsStatus, uiTranslations[language].tokenMissing);
+        return;
+      }
       
-      // Clear all data from localStorage
+      // Clear all data from storage
       await clearAllStoredData(accessToken);
 
       // Reset questions to initial state
@@ -422,7 +525,7 @@ export const useFormState = () => {
     } catch (error) {
       setTimedStatus(setQuestionsStatus, `Error resetting data: ${error.message}`);
     }
-  }, [language, auth.isAuthenticated, getAccessToken]);
+  }, [language, auth.isAuthenticated, auth.isLoading, getAccessToken]);
 
   /**
    * Toggle Debug on/off

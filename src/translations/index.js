@@ -27,7 +27,9 @@ export const uiTranslations = {
     language: "Language",
     login: "Log in",
     logout: "Log out",
-    authRequired: "Authentication required to save data"
+    authRequired: "Authentication required to save data",
+    authLoading: "Authentication in progress, please wait",
+    tokenMissing: "Authentication token not available"
   },
   de: {
     title: "DynamicForm",
@@ -54,7 +56,9 @@ export const uiTranslations = {
     language: "Sprache",
     login: "Anmelden",
     logout: "Abmelden",
-    authRequired: "Authentifizierung erforderlich, um Daten zu speichern"
+    authRequired: "Authentifizierung erforderlich, um Daten zu speichern",
+    authLoading: "Authentifizierung läuft, bitte warten",
+    tokenMissing: "Authentifizierungstoken nicht verfügbar"
   }
 };
 
