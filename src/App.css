@@ -591,3 +591,47 @@ pre {
     background-color: #ffffff !important;
   }
 }
+
+/* Auth button */
+.auth-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  min-height: 40px;
+  border-radius: 50%;
+  border: none;
+  background-color: #f0f2ff;
+  color: #646cff;
+  cursor: pointer;
+  transition: all 0.2s;
+  padding: 0;
+  margin-right: 10px;
+  font-size: 1.2rem;
+}
+
+.auth-button:hover {
+  background-color: #e6e8ff;
+  transform: scale(1.05);
+}
+
+.auth-button.logged-in {
+  background-color: #e6ffea;
+  color: #52c41a;
+}
+
+.auth-button.error {
+  background-color: #fff1f0;
+  color: #ff4d4f;
+}
+
+.auth-button.loading {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.auth-icon {
+  font-size: 1.2rem;
+  line-height: 1;
+}

@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types';
 
 /**
- * Debug editor component for modifying form JSON in debug mode
+ * Debug editor component for modifying form JSON in Debug
  * @param {Object} props Component props
  * @param {string} props.questionsJson The form JSON as a string
  * @param {string} props.jsonError Any JSON parsing error messages

@@ -31,6 +31,7 @@ function App() {
     jsonError,
     validationErrors,
     language,
+    isAuthenticated,
     getText,
     handleLanguageChange,
     handleChoiceChange,
@@ -55,6 +56,7 @@ function App() {
         language={language}
         uiTranslations={uiTranslations}
         handleLanguageChange={handleLanguageChange}
+        isAuthenticated={isAuthenticated}
       />
       
       <div className="container">
@@ -71,6 +73,7 @@ function App() {
               handleResetQuestions={handleResetQuestions}
               uiTranslations={uiTranslations}
               language={language}
+              isAuthenticated={isAuthenticated}
             />
           )}
 
@@ -86,6 +89,7 @@ function App() {
             handleTextChange={handleTextChange}
             handleChoiceChange={handleChoiceChange}
             getText={getText}
+            isAuthenticated={isAuthenticated}
           />
 
           {debugMode && (

@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types';
 
 /**
- * Debug results component to display user answers in debug mode
+ * Debug results component to display user answers in Debug
  * @param {Object} props Component props
  * @param {Object} props.userAnswers User answers data
  * @param {Object} props.uiTranslations Translations for UI elements

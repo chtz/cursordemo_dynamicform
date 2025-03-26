@@ -4,15 +4,15 @@
 export const uiTranslations = {
   en: {
     title: "DynamicForm",
-    debugMode: "Debug Mode",
-    formItems: "Form Items (Debug Mode)",
+    debugMode: "Debug",
+    formItems: "Form Items (Debug)",
     formatJson: "Format JSON",
     saveQuestions: "Save Questions",
     loadQuestions: "Load Questions",
     resetAllData: "Reset All Data",
     saveAnswers: "Save Answers",
     loadAnswers: "Load Answers",
-    yourAnswers: "Your Answers (Debug Mode)",
+    yourAnswers: "Your Answers (Debug)",
     required: "*",
     answerRequired: "This question requires an answer",
     pleaseAnswerAll: "Please answer all questions before saving",
@@ -24,7 +24,10 @@ export const uiTranslations = {
     questionsReset: "All data reset to default and cleared from storage",
     answersCleared: "Answers have been cleared",
     footer: "© 2024 @cht_z. All rights reserved.",
-    language: "Language"
+    language: "Language",
+    login: "Log in",
+    logout: "Log out",
+    authRequired: "Authentication required to save data"
   },
   de: {
     title: "DynamicForm",
@@ -48,7 +51,10 @@ export const uiTranslations = {
     questionsReset: "Alle Daten auf Standardwerte zurückgesetzt und aus dem Speicher gelöscht",
     answersCleared: "Antworten wurden gelöscht",
     footer: "© 2024 @cht_z. Alle Rechte vorbehalten.",
-    language: "Sprache"
+    language: "Sprache",
+    login: "Anmelden",
+    logout: "Abmelden",
+    authRequired: "Authentifizierung erforderlich, um Daten zu speichern"
   }
 };
 

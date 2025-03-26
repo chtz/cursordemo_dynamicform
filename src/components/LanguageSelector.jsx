@@ -15,7 +15,7 @@ const LanguageSelector = ({ currentLanguage, translations, onChange }) => {
   
   return (
     <div className="language-selector">
-      <span>{translations.language}:</span>
+      { /* <span>{translations.language}:</span> */ }
       <div className="language-links">
         <a 
           href="#" 
@@ -24,10 +24,8 @@ const LanguageSelector = ({ currentLanguage, translations, onChange }) => {
             e.preventDefault(); 
             handleLanguageChange('en'); 
           }}
-        >
-          EN
-        </a>
-        <span>|</span>
+        >EN</a>
+        { /* <span>|</span> */ }
         <a 
           href="#" 
           className={`language-link ${currentLanguage === 'de' ? 'active' : ''}`}

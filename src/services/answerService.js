@@ -7,24 +7,30 @@ const QUESTIONS_STORAGE_KEY = 'dynamicform_questions';
 /**
  * Save answers to storage
  * @param {Object} answers - Object containing question-answer pairs
+ * @param {string} [accessToken] - Optional access token for authenticated operations
  * @returns {Promise} - Promise resolving to the saved answers
  */
-export const saveAnswers = async (answers) => {
+export const saveAnswers = async (answers, accessToken) => {
   try {
     // Store in localStorage for now
     localStorage.setItem(ANSWERS_STORAGE_KEY, JSON.stringify(answers));
 
     console.log('Saving answers:', JSON.stringify(answers));
 
-    return answers;
+    // When we have a token and implement API integration:
+    // if (accessToken) {
+    //   const response = await fetch('/api/answers', {
+    //     method: 'POST',
+    //     headers: { 
+    //       'Content-Type': 'application/json',
+    //       'Authorization': `Bearer ${accessToken}`
+    //     },
+    //     body: JSON.stringify(answers),
+    //   });
+    //   return response.json();
+    // }
 
-    // When switching to REST API, replace with:
-    // const response = await fetch('/api/answers', {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify(answers),
-    // });
-    // return response.json();
+    return answers;
   } catch (error) {
     console.error('Error saving answers:', error);
     throw error;
@@ -33,17 +39,25 @@ export const saveAnswers = async (answers) => {
 
 /**
  * Load answers from storage
+ * @param {string} [accessToken] - Optional access token for authenticated operations
  * @returns {Promise} - Promise resolving to the loaded answers or null if none exist
  */
-export const loadAnswers = async () => {
+export const loadAnswers = async (accessToken) => {
   try {
     // Get from localStorage for now
     const storedAnswers = localStorage.getItem(ANSWERS_STORAGE_KEY);
     return storedAnswers ? JSON.parse(storedAnswers) : null;
 
-    // When switching to REST API, replace with:
-    // const response = await fetch('/api/answers');
-    // return response.json();
+    // When we have a token and implement API integration:
+    // if (accessToken) {
+    //   const response = await fetch('/api/answers', {
+    //     headers: {
+    //       'Authorization': `Bearer ${accessToken}`
+    //     }
+    //   });
+    //   return response.json();
+    // }
+    // return null;
   } catch (error) {
     console.error('Error loading answers:', error);
     return null;
@@ -53,21 +67,28 @@ export const loadAnswers = async () => {
 /**
  * Save questions to storage
  * @param {Array} questions - Array of question objects
+ * @param {string} [accessToken] - Optional access token for authenticated operations
  * @returns {Promise} - Promise resolving to the saved questions
  */
-export const saveQuestions = async (questions) => {
+export const saveQuestions = async (questions, accessToken) => {
   try {
     // Store in localStorage for now
     localStorage.setItem(QUESTIONS_STORAGE_KEY, JSON.stringify(questions));
-    return questions;
+    
+    // When we have a token and implement API integration:
+    // if (accessToken) {
+    //   const response = await fetch('/api/questions', {
+    //     method: 'POST',
+    //     headers: {
+    //       'Content-Type': 'application/json',
+    //       'Authorization': `Bearer ${accessToken}`
+    //     },
+    //     body: JSON.stringify(questions),
+    //   });
+    //   return response.json();
+    // }
 
-    // When switching to REST API, replace with:
-    // const response = await fetch('/api/questions', {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify(questions),
-    // });
-    // return response.json();
+    return questions;
   } catch (error) {
     console.error('Error saving questions:', error);
     throw error;
@@ -76,17 +97,25 @@ export const saveQuestions = async (questions) => {
 
 /**
  * Load questions from storage
+ * @param {string} [accessToken] - Optional access token for authenticated operations
  * @returns {Promise} - Promise resolving to the loaded questions or null if none exist
  */
-export const loadQuestions = async () => {
+export const loadQuestions = async (accessToken) => {
   try {
     // Get from localStorage for now
     const storedQuestions = localStorage.getItem(QUESTIONS_STORAGE_KEY);
     return storedQuestions ? JSON.parse(storedQuestions) : null;
 
-    // When switching to REST API, replace with:
-    // const response = await fetch('/api/questions');
-    // return response.json();
+    // When we have a token and implement API integration:
+    // if (accessToken) {
+    //   const response = await fetch('/api/questions', {
+    //     headers: {
+    //       'Authorization': `Bearer ${accessToken}`
+    //     }
+    //   });
+    //   return response.json();
+    // }
+    // return null;
   } catch (error) {
     console.error('Error loading questions:', error);
     return null;
@@ -95,18 +124,27 @@ export const loadQuestions = async () => {
 
 /**
  * Clear all stored data (questions and answers)
+ * @param {string} [accessToken] - Optional access token for authenticated operations
  * @returns {Promise} - Promise resolving when clear is complete
  */
-export const clearAllStoredData = async () => {
+export const clearAllStoredData = async (accessToken) => {
   try {
     // Remove from localStorage for now
     localStorage.removeItem(QUESTIONS_STORAGE_KEY);
     localStorage.removeItem(ANSWERS_STORAGE_KEY);
-    return true;
     
-    // When switching to REST API, replace with:
-    // const response = await fetch('/api/clear', { method: 'DELETE' });
-    // return response.ok;
+    // When we have a token and implement API integration:
+    // if (accessToken) {
+    //   const response = await fetch('/api/clear', {
+    //     method: 'DELETE',
+    //     headers: {
+    //       'Authorization': `Bearer ${accessToken}`
+    //     }
+    //   });
+    //   return response.ok;
+    // }
+    
+    return true;
   } catch (error) {
     console.error('Error clearing stored data:', error);
     throw error;

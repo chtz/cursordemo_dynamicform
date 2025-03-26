@@ -12,7 +12,7 @@ This interactive form application was created **entirely by AI** using Cursor ID
   - Multi-language support (English/Spanish)
   - Various input types (radio selection, multiline text, display elements)
   - Form validation
-  - Debug mode for form editing and JSON manipulation
+  - Debug for form editing and JSON manipulation
   
 - **Responsive Design**
   - Mobile-optimized layout and touch targets (44px minimum)
@@ -55,7 +55,7 @@ The application follows a component-based architecture with clear separation of 
 - **State Synchronization**: Form items and JSON representation are kept in sync with careful state management
 - **Utility Functions**: Complex state operations are abstracted into reusable utility functions
 
-### Debug Mode & JSON Editing
+### Debug & JSON Editing
 
 - **Free-form Text Editing**: JSON can be edited with full control over spacing, line breaks, and formatting
 - **Live Preview with Manual Control**: Changes to the form preview happen in real-time when JSON is valid, without affecting the text formatting

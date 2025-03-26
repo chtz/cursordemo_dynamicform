@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useAuth } from 'react-oidc-context';
 import { loadAnswers, saveAnswers, loadQuestions, saveQuestions, clearAllStoredData } from '../services/answerService';
 import { initialFormItems, DEFAULT_LANGUAGE } from '../constants';
 import { validateForm, safeParseJSON, withEditingState } from '../utils/formUtils';
@@ -12,13 +13,17 @@ import { setTimedStatus } from '../utils/timerUtils';
  * - Form items definition and rendering
  * - User answers management
  * - Validation
- * - Debug mode with JSON editing
+ * - Debug with JSON editing
  * - Internationalization
  * - Persistence through localStorage
+ * - Authentication integration
  * 
  * @returns {Object} Form state and handlers
  */
 export const useFormState = () => {
+  // Authentication state
+  const auth = useAuth();
+  
   // Form state
   const [formItems, setFormItems] = useState(initialFormItems);
   const [questionsJson, setQuestionsJson] = useState('');
@@ -44,18 +49,28 @@ export const useFormState = () => {
     return textObj[language] || textObj.en || '';
   }, [language]);
 
+  // Get access token when authenticated
+  const getAccessToken = useCallback(() => {
+    if (auth.isAuthenticated && auth.user?.access_token) {
+      return auth.user.access_token;
+    }
+    return null;
+  }, [auth.isAuthenticated, auth.user]);
+
   // Load questions and answers from storage when component mounts
   useEffect(() => {
     const fetchData = async () => {
       try {
+        const accessToken = getAccessToken();
+        
         // Load questions
-        const savedQuestions = await loadQuestions();
+        const savedQuestions = await loadQuestions(accessToken);
         if (savedQuestions) {
           setFormItems(savedQuestions);
         }
 
         // Load answers
-        const savedAnswers = await loadAnswers();
+        const savedAnswers = await loadAnswers(accessToken);
         if (savedAnswers) {
           // Check if answers are in the new format (with language)
           if (savedAnswers.language && savedAnswers.answers) {
@@ -73,9 +88,9 @@ export const useFormState = () => {
     };
 
     fetchData();
-  }, []);
+  }, [getAccessToken]); // Re-fetch when auth state changes
 
-  // Set initial questions JSON when entering debug mode
+  // Set initial questions JSON when entering Debug
   useEffect(() => {
     if (debugMode && !questionsJson) {
       setQuestionsJson(JSON.stringify(formItems, null, 2));
@@ -171,6 +186,12 @@ export const useFormState = () => {
   const handleSubmit = useCallback((e) => {
     e.preventDefault();
 
+    // Check if user is authenticated
+    if (!auth.isAuthenticated) {
+      setTimedStatus(setSaveStatus, uiTranslations[language].authRequired);
+      return;
+    }
+
     if (validateFormData()) {
       handleSaveAnswers();
     } else {
@@ -185,27 +206,37 @@ export const useFormState = () => {
         }
       }
     }
-  }, [validateFormData, validationErrors, language]);
+  }, [validateFormData, validationErrors, language, auth.isAuthenticated]);
 
   /**
    * Handle saving answers to localStorage
    */
   const handleSaveAnswers = useCallback(async () => {
     try {
+      const accessToken = getAccessToken();
+      
+      // Check if user is authenticated
+      if (!auth.isAuthenticated) {
+        setTimedStatus(setSaveStatus, uiTranslations[language].authRequired);
+        return;
+      }
+      
       // Save both the answers and the current language
-      await saveAnswers(userAnswers);
+      await saveAnswers(userAnswers, accessToken);
       setTimedStatus(setSaveStatus, uiTranslations[language].savedSuccessfully);
     } catch (error) {
       setTimedStatus(setSaveStatus, uiTranslations[language].errorSaving);
     }
-  }, [userAnswers, language]);
+  }, [userAnswers, language, auth.isAuthenticated, getAccessToken]);
 
   /**
    * Handle loading answers from localStorage
    */
   const handleLoadAnswers = useCallback(async () => {
     try {
-      const savedAnswers = await loadAnswers();
+      const accessToken = getAccessToken();
+      
+      const savedAnswers = await loadAnswers(accessToken);
       if (savedAnswers) {
         // Check if answers are in the new format
         if (savedAnswers.language && savedAnswers.answers) {
@@ -226,7 +257,7 @@ export const useFormState = () => {
     } catch (error) {
       setTimedStatus(setSaveStatus, uiTranslations[language].errorLoading);
     }
-  }, [language]);
+  }, [language, getAccessToken]);
 
   /**
    * Handle changes to the JSON editor
@@ -283,14 +314,22 @@ export const useFormState = () => {
    * Parses and validates JSON before saving
    */
   const handleSaveQuestions = useCallback(async () => {
+    // Check if user is authenticated
+    if (!auth.isAuthenticated) {
+      setTimedStatus(setQuestionsStatus, uiTranslations[language].authRequired);
+      return;
+    }
+    
     safeParseJSON(
       questionsJson,
       // On success
       async (parsedQuestions) => {
         try {
+          const accessToken = getAccessToken();
+          
           // Update form items and save them
           setFormItems(parsedQuestions);
-          await saveQuestions(parsedQuestions);
+          await saveQuestions(parsedQuestions, accessToken);
           setTimedStatus(setQuestionsStatus, uiTranslations[language].savedSuccessfully);
         } catch (error) {
           setTimedStatus(
@@ -308,14 +347,16 @@ export const useFormState = () => {
         setJsonError(errorMsg);
       }
     );
-  }, [questionsJson, language]);
+  }, [questionsJson, language, auth.isAuthenticated, getAccessToken]);
 
   /**
    * Handle loading questions from localStorage
    */
   const handleLoadQuestions = useCallback(async () => {
     try {
-      const savedQuestions = await loadQuestions();
+      const accessToken = getAccessToken();
+      
+      const savedQuestions = await loadQuestions(accessToken);
       if (savedQuestions) {
         withEditingState(isEditing, () => {
           setFormItems(savedQuestions);
@@ -339,15 +380,23 @@ export const useFormState = () => {
         `${uiTranslations[language].errorLoading}: ${error.message}`
       );
     }
-  }, [language]);
+  }, [language, getAccessToken]);
 
   /**
    * Reset questions and answers to initial default and clear localStorage
    */
   const handleResetQuestions = useCallback(async () => {
+    // Check if user is authenticated
+    if (!auth.isAuthenticated) {
+      setTimedStatus(setQuestionsStatus, uiTranslations[language].authRequired);
+      return;
+    }
+    
     try {
+      const accessToken = getAccessToken();
+      
       // Clear all data from localStorage
-      await clearAllStoredData();
+      await clearAllStoredData(accessToken);
 
       // Reset questions to initial state
       withEditingState(isEditing, () => {
@@ -373,14 +422,14 @@ export const useFormState = () => {
     } catch (error) {
       setTimedStatus(setQuestionsStatus, `Error resetting data: ${error.message}`);
     }
-  }, [language]);
+  }, [language, auth.isAuthenticated, getAccessToken]);
 
   /**
-   * Toggle debug mode on/off
+   * Toggle Debug on/off
    */
   const toggleDebugMode = useCallback(() => {
     setDebugMode(prevMode => {
-      // When turning debug mode on, update the JSON display
+      // When turning Debug on, update the JSON display
       if (!prevMode) {
         withEditingState(isEditing, () => {
           setQuestionsJson(JSON.stringify(formItems, null, 2));
@@ -400,6 +449,7 @@ export const useFormState = () => {
     jsonError,
     validationErrors,
     language,
+    isAuthenticated: auth.isAuthenticated,
     getText,
     handleLanguageChange,
     handleChoiceChange,
