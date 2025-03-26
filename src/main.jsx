@@ -4,9 +4,14 @@ import { AuthProvider } from 'react-oidc-context'
 import './index.css'
 import App from './App.jsx'
 
+// Determine if the app is running locally or deployed
+const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
+// Configure OIDC based on environment
 const oidcConfig = {
   authority: "https://myidpdev.unliked.in",
-  client_id: "dynamicform.local",
+  // Set different client ID depending on environment
+  client_id: isLocalhost ? "dynamicform.local" : "dynamicform.ghpages", 
   redirect_uri: window.location.origin + "/cursordemo_dynamicform/",
   automaticSilentRenew: true,
   onSigninCallback: () => {
