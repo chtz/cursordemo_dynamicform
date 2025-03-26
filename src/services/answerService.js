@@ -1,34 +1,39 @@
 // Answer Service - handles saving and loading form answers
-// Currently uses localStorage, can be replaced with REST API calls later
+// Now uses HTTP API with Bearer authentication
 
+const API_BASE_URL = 'https://mykvstoredev.unliked.in/api/values';
 const ANSWERS_STORAGE_KEY = 'dynamicform_answers';
 const QUESTIONS_STORAGE_KEY = 'dynamicform_questions';
 
 /**
  * Save answers to storage
  * @param {Object} answers - Object containing question-answer pairs
- * @param {string} [accessToken] - Optional access token for authenticated operations
+ * @param {string} [accessToken] - Access token for authenticated operations
  * @returns {Promise} - Promise resolving to the saved answers
  */
 export const saveAnswers = async (answers, accessToken) => {
   try {
-    // Store in localStorage for now
-    localStorage.setItem(ANSWERS_STORAGE_KEY, JSON.stringify(answers));
+    if (!accessToken) {
+      console.error('No access token provided for saving answers');
+      throw new Error('Authentication required');
+    }
 
-    console.log('Saving answers:', JSON.stringify(answers));
+    // Convert answers object to string for storage
+    const answersString = JSON.stringify(answers);
+    
+    // Save to API
+    const response = await fetch(`${API_BASE_URL}/${ANSWERS_STORAGE_KEY}`, {
+      method: 'PUT',
+      headers: { 
+        'Content-Type': 'application/text',
+        'Authorization': `Bearer ${accessToken}`
+      },
+      body: answersString
+    });
 
-    // When we have a token and implement API integration:
-    // if (accessToken) {
-    //   const response = await fetch('/api/answers', {
-    //     method: 'POST',
-    //     headers: { 
-    //       'Content-Type': 'application/json',
-    //       'Authorization': `Bearer ${accessToken}`
-    //     },
-    //     body: JSON.stringify(answers),
-    //   });
-    //   return response.json();
-    // }
+    if (!response.ok) {
+      throw new Error(`Failed to save answers: ${response.status} ${response.statusText}`);
+    }
 
     return answers;
   } catch (error) {
@@ -39,25 +44,35 @@ export const saveAnswers = async (answers, accessToken) => {
 
 /**
  * Load answers from storage
- * @param {string} [accessToken] - Optional access token for authenticated operations
+ * @param {string} [accessToken] - Access token for authenticated operations
  * @returns {Promise} - Promise resolving to the loaded answers or null if none exist
  */
 export const loadAnswers = async (accessToken) => {
   try {
-    // Get from localStorage for now
-    const storedAnswers = localStorage.getItem(ANSWERS_STORAGE_KEY);
-    return storedAnswers ? JSON.parse(storedAnswers) : null;
+    if (!accessToken) {
+      console.warn('No access token provided for loading answers');
+      return null;
+    }
 
-    // When we have a token and implement API integration:
-    // if (accessToken) {
-    //   const response = await fetch('/api/answers', {
-    //     headers: {
-    //       'Authorization': `Bearer ${accessToken}`
-    //     }
-    //   });
-    //   return response.json();
-    // }
-    // return null;
+    // Load from API
+    const response = await fetch(`${API_BASE_URL}/${ANSWERS_STORAGE_KEY}`, {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`
+      }
+    });
+
+    // Handle 404 for missing data
+    if (response.status === 404) {
+      return null;
+    }
+    
+    if (!response.ok) {
+      throw new Error(`Failed to load answers: ${response.status} ${response.statusText}`);
+    }
+
+    // Get text response and parse as JSON
+    const answersText = await response.text();
+    return JSON.parse(answersText);
   } catch (error) {
     console.error('Error loading answers:', error);
     return null;
@@ -67,26 +82,32 @@ export const loadAnswers = async (accessToken) => {
 /**
  * Save questions to storage
  * @param {Array} questions - Array of question objects
- * @param {string} [accessToken] - Optional access token for authenticated operations
+ * @param {string} [accessToken] - Access token for authenticated operations
  * @returns {Promise} - Promise resolving to the saved questions
  */
 export const saveQuestions = async (questions, accessToken) => {
   try {
-    // Store in localStorage for now
-    localStorage.setItem(QUESTIONS_STORAGE_KEY, JSON.stringify(questions));
+    if (!accessToken) {
+      console.error('No access token provided for saving questions');
+      throw new Error('Authentication required');
+    }
+
+    // Convert questions array to string for storage
+    const questionsString = JSON.stringify(questions);
     
-    // When we have a token and implement API integration:
-    // if (accessToken) {
-    //   const response = await fetch('/api/questions', {
-    //     method: 'POST',
-    //     headers: {
-    //       'Content-Type': 'application/json',
-    //       'Authorization': `Bearer ${accessToken}`
-    //     },
-    //     body: JSON.stringify(questions),
-    //   });
-    //   return response.json();
-    // }
+    // Save to API
+    const response = await fetch(`${API_BASE_URL}/${QUESTIONS_STORAGE_KEY}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/text',
+        'Authorization': `Bearer ${accessToken}`
+      },
+      body: questionsString
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to save questions: ${response.status} ${response.statusText}`);
+    }
 
     return questions;
   } catch (error) {
@@ -97,25 +118,35 @@ export const saveQuestions = async (questions, accessToken) => {
 
 /**
  * Load questions from storage
- * @param {string} [accessToken] - Optional access token for authenticated operations
+ * @param {string} [accessToken] - Access token for authenticated operations
  * @returns {Promise} - Promise resolving to the loaded questions or null if none exist
  */
 export const loadQuestions = async (accessToken) => {
   try {
-    // Get from localStorage for now
-    const storedQuestions = localStorage.getItem(QUESTIONS_STORAGE_KEY);
-    return storedQuestions ? JSON.parse(storedQuestions) : null;
+    if (!accessToken) {
+      console.warn('No access token provided for loading questions');
+      return null;
+    }
 
-    // When we have a token and implement API integration:
-    // if (accessToken) {
-    //   const response = await fetch('/api/questions', {
-    //     headers: {
-    //       'Authorization': `Bearer ${accessToken}`
-    //     }
-    //   });
-    //   return response.json();
-    // }
-    // return null;
+    // Load from API
+    const response = await fetch(`${API_BASE_URL}/${QUESTIONS_STORAGE_KEY}`, {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`
+      }
+    });
+
+    // Handle 404 for missing data
+    if (response.status === 404) {
+      return null;
+    }
+    
+    if (!response.ok) {
+      throw new Error(`Failed to load questions: ${response.status} ${response.statusText}`);
+    }
+
+    // Get text response and parse as JSON
+    const questionsText = await response.text();
+    return JSON.parse(questionsText);
   } catch (error) {
     console.error('Error loading questions:', error);
     return null;
@@ -124,25 +155,35 @@ export const loadQuestions = async (accessToken) => {
 
 /**
  * Clear all stored data (questions and answers)
- * @param {string} [accessToken] - Optional access token for authenticated operations
+ * @param {string} [accessToken] - Access token for authenticated operations
  * @returns {Promise} - Promise resolving when clear is complete
  */
 export const clearAllStoredData = async (accessToken) => {
   try {
-    // Remove from localStorage for now
-    localStorage.removeItem(QUESTIONS_STORAGE_KEY);
-    localStorage.removeItem(ANSWERS_STORAGE_KEY);
+    if (!accessToken) {
+      console.error('No access token provided for clearing data');
+      throw new Error('Authentication required');
+    }
+
+    // Delete functionality not yet supported by the API
+    // For now, we'll clear local storage only
+    console.warn('API delete functionality not yet implemented. Will be added later.');
     
-    // When we have a token and implement API integration:
-    // if (accessToken) {
-    //   const response = await fetch('/api/clear', {
-    //     method: 'DELETE',
-    //     headers: {
-    //       'Authorization': `Bearer ${accessToken}`
-    //     }
-    //   });
-    //   return response.ok;
-    // }
+    // TODO: Implement proper API delete when supported
+    // This would look something like:
+    // const deleteAnswers = fetch(`${API_BASE_URL}/${ANSWERS_STORAGE_KEY}`, {
+    //   method: 'DELETE',
+    //   headers: { 'Authorization': `Bearer ${accessToken}` }
+    // });
+    // const deleteQuestions = fetch(`${API_BASE_URL}/${QUESTIONS_STORAGE_KEY}`, {
+    //   method: 'DELETE',
+    //   headers: { 'Authorization': `Bearer ${accessToken}` }
+    // });
+    // await Promise.all([deleteAnswers, deleteQuestions]);
+
+    // For now, "clear" by saving empty values
+    await saveAnswers({ language: 'en', answers: {} }, accessToken);
+    await saveQuestions([], accessToken);
     
     return true;
   } catch (error) {
