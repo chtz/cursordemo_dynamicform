@@ -1,12 +1,21 @@
 import { useState, useEffect, useRef } from 'react';
 import { loadAnswers, saveAnswers, loadQuestions, saveQuestions, clearAllStoredData } from '../services/answerService';
 import { initialFormItems, DEFAULT_LANGUAGE } from '../constants';
-import { validateForm } from '../utils/formUtils';
+import { validateForm, safeParseJSON, withEditingState } from '../utils/formUtils';
 import { uiTranslations } from '../translations';
 import { setTimedStatus } from '../utils/timerUtils';
 
 /**
  * Custom hook for managing form state, answers, and validation
+ * 
+ * This hook encapsulates all the state and logic for the dynamic form:
+ * - Form items definition and rendering
+ * - User answers management
+ * - Validation
+ * - Debug mode with JSON editing
+ * - Internationalization
+ * - Persistence through localStorage
+ * 
  * @returns {Object} Form state and handlers
  */
 export const useFormState = () => {
@@ -25,7 +34,11 @@ export const useFormState = () => {
   // This breaks the circular dependency between form items and JSON text
   const isEditing = useRef(false);
 
-  // Helper function to get text in current language
+  /**
+   * Helper function to get text in current language with fallback to English
+   * @param {Object} textObj - Object containing translations keyed by language code
+   * @returns {string} Text in the current language or fallback
+   */
   const getText = (textObj) => {
     if (!textObj) return '';
     return textObj[language] || textObj.en || '';
@@ -78,7 +91,10 @@ export const useFormState = () => {
     }
   }, [debugMode, formItems]);
 
-  // Handle language change
+  /**
+   * Handle language change
+   * @param {Object} e - Event object containing the selected language
+   */
   const handleLanguageChange = (e) => {
     const newLanguage = e.target.value;
     setLanguage(newLanguage);
@@ -95,7 +111,11 @@ export const useFormState = () => {
     }
   };
 
-  // Handle choice/radio button change
+  /**
+   * Handle choice/radio button change
+   * @param {string} questionId - ID of the question being answered
+   * @param {string} optionId - ID of the selected option
+   */
   const handleChoiceChange = (questionId, optionId) => {
     setUserAnswers(prev => ({
       ...prev,
@@ -113,7 +133,11 @@ export const useFormState = () => {
     }
   };
 
-  // Handle text input change
+  /**
+   * Handle text input change
+   * @param {string} questionId - ID of the question being answered
+   * @param {string} value - Text value entered by the user
+   */
   const handleTextChange = (questionId, value) => {
     setUserAnswers(prev => ({
       ...prev,
@@ -131,14 +155,20 @@ export const useFormState = () => {
     }
   };
 
-  // Validate the form to ensure all questions have answers
+  /**
+   * Validate the form to ensure all questions have answers
+   * @returns {boolean} True if the form is valid, false otherwise
+   */
   const validateFormData = () => {
     const { isValid, errors } = validateForm(formItems, userAnswers, uiTranslations, language);
     setValidationErrors(errors);
     return isValid;
   };
 
-  // Handle form submission
+  /**
+   * Handle form submission
+   * @param {Object} e - Form submission event
+   */
   const handleSubmit = (e) => {
     e.preventDefault();
 
@@ -158,7 +188,9 @@ export const useFormState = () => {
     }
   };
 
-  // Handle saving answers
+  /**
+   * Handle saving answers to localStorage
+   */
   const handleSaveAnswers = async () => {
     try {
       // Save both the answers and the current language
@@ -169,7 +201,9 @@ export const useFormState = () => {
     }
   };
 
-  // Handle loading answers
+  /**
+   * Handle loading answers from localStorage
+   */
   const handleLoadAnswers = async () => {
     try {
       const savedAnswers = await loadAnswers();
@@ -195,105 +229,107 @@ export const useFormState = () => {
     }
   };
 
-  // Handle questions JSON edit
+  /**
+   * Handle changes to the JSON editor
+   * Updates form items when JSON is valid, but preserves user formatting
+   * @param {Object} e - Change event from the textarea
+   */
   const handleQuestionsJsonChange = (e) => {
-    // Set editing flag to prevent the effect from overriding
-    isEditing.current = true;
-    
     const newValue = e.target.value;
-    // Always update the displayed JSON text with exactly what user typed
-    setQuestionsJson(newValue);
-
-    try {
-      // Try to parse the JSON
-      const parsedQuestions = JSON.parse(newValue);
-      
-      // If valid JSON array, update form items silently
-      if (Array.isArray(parsedQuestions)) {
-        setFormItems(parsedQuestions);
-        setJsonError('');
-      } else {
-        setJsonError('Questions data must be an array');
-      }
-    } catch (error) {
-      // Only show error, don't update the form if JSON is invalid
-      setJsonError('Invalid JSON format');
-    }
     
-    // Clear the editing flag after a short delay
-    // This allows React to complete the current render cycle
-    setTimeout(() => {
-      isEditing.current = false;
-    }, 0);
-  };
-
-  // Format JSON in the textarea (explicit user action)
-  const formatJson = () => {
-    try {
-      const parsedJson = JSON.parse(questionsJson);
+    // Always update the displayed JSON text with exactly what user typed
+    withEditingState(isEditing, () => {
+      setQuestionsJson(newValue);
       
-      // Only format on explicit user action
-      isEditing.current = true;
-      setQuestionsJson(JSON.stringify(parsedJson, null, 2));
-      setJsonError('');
-      
-      // Clear the editing flag after this operation
-      setTimeout(() => {
-        isEditing.current = false;
-      }, 0);
-    } catch (error) {
-      setJsonError('Cannot format: Invalid JSON');
-    }
-  };
-
-  // Handle saving questions
-  const handleSaveQuestions = async () => {
-    try {
-      // First try to ensure we have valid JSON
-      const parsedQuestions = JSON.parse(questionsJson);
-      if (!Array.isArray(parsedQuestions)) {
-        setJsonError('Questions data must be an array');
-        return;
-      }
-      
-      // Update form items and save them
-      setFormItems(parsedQuestions);
-      await saveQuestions(parsedQuestions);
-      setTimedStatus(setQuestionsStatus, uiTranslations[language].savedSuccessfully);
-    } catch (error) {
-      setTimedStatus(
-        setQuestionsStatus, 
-        `${uiTranslations[language].errorSaving}: ${error.message}`
+      // Try to parse the JSON and update form items if valid
+      safeParseJSON(
+        newValue,
+        // On success
+        (parsedQuestions) => {
+          setFormItems(parsedQuestions);
+          setJsonError('');
+        },
+        // On error
+        (errorMsg) => {
+          setJsonError(errorMsg);
+        }
       );
-    }
+    });
   };
 
-  // Handle loading questions
+  /**
+   * Format JSON in the textarea (explicit user action)
+   * Only formats when the user clicks the button
+   */
+  const formatJson = () => {
+    safeParseJSON(
+      questionsJson,
+      // On success
+      (parsedJson) => {
+        withEditingState(isEditing, () => {
+          // Only format on explicit user action
+          setQuestionsJson(JSON.stringify(parsedJson, null, 2));
+          setJsonError('');
+        });
+      },
+      // On error
+      (errorMsg) => {
+        setJsonError(`Cannot format: ${errorMsg}`);
+      }
+    );
+  };
+
+  /**
+   * Handle saving questions to localStorage
+   * Parses and validates JSON before saving
+   */
+  const handleSaveQuestions = async () => {
+    safeParseJSON(
+      questionsJson,
+      // On success
+      async (parsedQuestions) => {
+        try {
+          // Update form items and save them
+          setFormItems(parsedQuestions);
+          await saveQuestions(parsedQuestions);
+          setTimedStatus(setQuestionsStatus, uiTranslations[language].savedSuccessfully);
+        } catch (error) {
+          setTimedStatus(
+            setQuestionsStatus, 
+            `${uiTranslations[language].errorSaving}: ${error.message}`
+          );
+        }
+      },
+      // On error
+      (errorMsg) => {
+        setJsonError(errorMsg);
+      },
+      // On not array
+      (errorMsg) => {
+        setJsonError(errorMsg);
+      }
+    );
+  };
+
+  /**
+   * Handle loading questions from localStorage
+   */
   const handleLoadQuestions = async () => {
     try {
       const savedQuestions = await loadQuestions();
       if (savedQuestions) {
-        // Set editing flag to prevent effect from overriding
-        isEditing.current = true;
-        
-        setFormItems(savedQuestions);
-        setQuestionsJson(JSON.stringify(savedQuestions, null, 2));
+        withEditingState(isEditing, () => {
+          setFormItems(savedQuestions);
+          setQuestionsJson(JSON.stringify(savedQuestions, null, 2));
+        });
         setTimedStatus(setQuestionsStatus, uiTranslations[language].loadedSuccessfully);
-        
-        // Clear the editing flag after operation
-        setTimeout(() => {
-          isEditing.current = false;
-        }, 0);
       } else {
         setTimedStatus(setQuestionsStatus, uiTranslations[language].noSavedAnswers);
         
-        isEditing.current = true;
-        setFormItems(initialFormItems);
-        setQuestionsJson(JSON.stringify(initialFormItems, null, 2));
-        
-        setTimeout(() => {
-          isEditing.current = false;
-        }, 0);
+        withEditingState(isEditing, () => {
+          setFormItems(initialFormItems);
+          setQuestionsJson(JSON.stringify(initialFormItems, null, 2));
+        });
       }
 
       // Reset validation errors when questions change
@@ -306,20 +342,19 @@ export const useFormState = () => {
     }
   };
 
-  // Reset questions and answers to initial default and clear localStorage
+  /**
+   * Reset questions and answers to initial default and clear localStorage
+   */
   const handleResetQuestions = async () => {
     try {
       // Clear all data from localStorage
       await clearAllStoredData();
 
       // Reset questions to initial state
-      isEditing.current = true;
-      setFormItems(initialFormItems);
-      setQuestionsJson(JSON.stringify(initialFormItems, null, 2));
-      
-      setTimeout(() => {
-        isEditing.current = false;
-      }, 0);
+      withEditingState(isEditing, () => {
+        setFormItems(initialFormItems);
+        setQuestionsJson(JSON.stringify(initialFormItems, null, 2));
+      });
 
       // Reset answers
       setUserAnswers({ language, answers: {} });
@@ -341,17 +376,16 @@ export const useFormState = () => {
     }
   };
 
-  // Toggle debug mode
+  /**
+   * Toggle debug mode on/off
+   */
   const toggleDebugMode = () => {
     setDebugMode(!debugMode);
     if (!debugMode) {
       // When turning debug mode on, update the JSON display
-      isEditing.current = true;
-      setQuestionsJson(JSON.stringify(formItems, null, 2));
-      
-      setTimeout(() => {
-        isEditing.current = false;
-      }, 0);
+      withEditingState(isEditing, () => {
+        setQuestionsJson(JSON.stringify(formItems, null, 2));
+      });
     }
   };
 

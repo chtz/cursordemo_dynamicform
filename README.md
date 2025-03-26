@@ -50,6 +50,8 @@ The application follows a component-based architecture with clear separation of 
 - **Custom Hooks**: Form state and related behaviors are encapsulated in custom hooks (`useFormState`)
 - **Controlled Components**: All form inputs are React controlled components for predictable behavior
 - **Optimistic Updates**: UI feedback is provided immediately, with async operations handled in the background
+- **State Synchronization**: Form items and JSON representation are kept in sync with careful state management
+- **Utility Functions**: Complex state operations are abstracted into reusable utility functions
 
 ### Debug Mode & JSON Editing
 
@@ -57,6 +59,13 @@ The application follows a component-based architecture with clear separation of 
 - **Live Preview with Manual Control**: Changes to the form preview happen in real-time when JSON is valid, without affecting the text formatting
 - **Explicit Formatting Control**: JSON is only pretty-printed when the user explicitly requests formatting
 - **State Decoupling**: Uses a reference flag to break circular state dependencies between the JSON editor and the form preview
+
+### Code Organization
+
+- **Utility Abstraction**: Common operations like JSON parsing and editing state management are extracted into reusable utilities
+- **Generic Higher-Order Functions**: Functions like `withEditingState` handle cross-cutting concerns without duplicating code
+- **Consistent Error Handling**: Standardized approach to parsing, validation and error reporting
+- **Functional Programming**: Pure functions and immutable state updates for predictable behavior
 
 ### UX/UI Considerations
 
@@ -88,6 +97,8 @@ The application follows a component-based architecture with clear separation of 
 - **JSON Editor Circular Dependency**: We implemented a flag-based mechanism to break the circular dependency between form state and editor state, prioritizing user control while maintaining live updates
 - **useRef vs. useState**: We chose useRef for the editing flag since it doesn't trigger re-renders and allows for synchronization across effect boundaries
 - **Delayed Flag Reset**: We use setTimeout with 0ms delay to ensure React rendering completes before clearing flags, avoiding race conditions
+- **Callback-Based Error Handling**: We chose a callback pattern for JSON parsing to provide more flexible error handling while keeping function signatures simple
+- **Generic vs. Specific Utilities**: We created more generic utilities that can be reused across the application rather than specialized functions tied to specific components
 - **Error Handling Strategy**: We chose to show validation errors without blocking edits to allow users to work through problems
 - **Performance vs. Simplicity**: We opted for simplicity in the form generation rather than optimizing for large forms
 - **Bundle Size vs. Features**: We included Markdown support for rich text despite the increased bundle size
