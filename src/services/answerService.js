@@ -165,26 +165,33 @@ export const clearAllStoredData = async (accessToken) => {
       throw new Error('Authentication required');
     }
 
-    // Delete functionality not yet supported by the API
-    // For now, we'll clear local storage only
-    console.warn('API delete functionality not yet implemented. Will be added later.');
+    // Delete data using the DELETE endpoints
+    const deleteAnswersPromise = fetch(`${API_BASE_URL}/${ANSWERS_STORAGE_KEY}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${accessToken}` }
+    });
     
-    // TODO: Implement proper API delete when supported
-    // This would look something like:
-    // const deleteAnswers = fetch(`${API_BASE_URL}/${ANSWERS_STORAGE_KEY}`, {
-    //   method: 'DELETE',
-    //   headers: { 'Authorization': `Bearer ${accessToken}` }
-    // });
-    // const deleteQuestions = fetch(`${API_BASE_URL}/${QUESTIONS_STORAGE_KEY}`, {
-    //   method: 'DELETE',
-    //   headers: { 'Authorization': `Bearer ${accessToken}` }
-    // });
-    // await Promise.all([deleteAnswers, deleteQuestions]);
+    const deleteQuestionsPromise = fetch(`${API_BASE_URL}/${QUESTIONS_STORAGE_KEY}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${accessToken}` }
+    });
 
-    // For now, "clear" by saving empty values
-    await saveAnswers({ language: 'en', answers: {} }, accessToken);
-    await saveQuestions([], accessToken);
-    
+    // Wait for both delete operations to complete
+    const [answersResponse, questionsResponse] = await Promise.all([
+      deleteAnswersPromise, 
+      deleteQuestionsPromise
+    ]);
+
+    // Check for errors
+    if (!answersResponse.ok && answersResponse.status !== 404) {
+      throw new Error(`Failed to delete answers: ${answersResponse.status} ${answersResponse.statusText}`);
+    }
+
+    if (!questionsResponse.ok && questionsResponse.status !== 404) {
+      throw new Error(`Failed to delete questions: ${questionsResponse.status} ${questionsResponse.statusText}`);
+    }
+
+    console.log('All data successfully cleared from API storage');
     return true;
   } catch (error) {
     console.error('Error clearing stored data:', error);
