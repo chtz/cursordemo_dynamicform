@@ -112,10 +112,11 @@ export const useFormState = () => {
     fetchData();
   }, [auth.isAuthenticated, getAccessToken, isAuthReady]);
   
-  // Reset the dataFetched flag when auth state changes 
+  // Reset the dataFetched flag when auth state changes or error occurs
   // This allows refetching data when user logs in
   useEffect(() => {
-    if (!auth.isAuthenticated) {
+    // Reset form when user logs out or an auth error occurs
+    if (!auth.isAuthenticated || auth.error) {
       dataFetched.current = false;
       
       // Reset form items and answers when user logs out
@@ -129,8 +130,12 @@ export const useFormState = () => {
           setQuestionsJson(JSON.stringify(initialFormItems, null, 2));
         });
       }
+      
+      // Clear status messages
+      setSaveStatus('');
+      setQuestionsStatus('');
     }
-  }, [auth.isAuthenticated, debugMode]);
+  }, [auth.isAuthenticated, auth.error, debugMode]);
 
   // Set initial questions JSON when entering Debug
   useEffect(() => {
