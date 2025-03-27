@@ -14,6 +14,7 @@ import { FORM_ITEM_TYPES } from '../constants';
  * @param {Function} props.handleChoiceChange Handler for choice selection changes
  * @param {Function} props.getText Helper to get text in current language
  * @param {Object} props.uiTranslations Translations for UI elements
+ * @param {boolean} props.isApiOperationInProgress Whether any API operation is in progress
  * @returns {JSX.Element} The rendered form item
  */
 const FormItem = ({ 
@@ -25,7 +26,8 @@ const FormItem = ({
   handleTextChange, 
   handleChoiceChange,
   getText,
-  uiTranslations
+  uiTranslations,
+  isApiOperationInProgress
 }) => {
   const hasError = validationErrors[item.id];
   
@@ -59,6 +61,7 @@ const FormItem = ({
               rows={4}
               required
               minLength={1}
+              readOnly={isApiOperationInProgress}
             />
             {hasError && <div className="validation-error">{validationErrors[item.id]}</div>}
           </div>
@@ -100,6 +103,7 @@ const FormItem = ({
                     checked={userAnswers.answers[item.id] === optionId}
                     onChange={() => handleChoiceChange(item.id, optionId)}
                     required
+                    disabled={isApiOperationInProgress}
                   />
                   <label htmlFor={`q${index}-a${optionIndex}`}>
                     <MarkdownText text={optionValue} noParagraph={true} />
@@ -126,7 +130,8 @@ FormItem.propTypes = {
   handleTextChange: PropTypes.func.isRequired,
   handleChoiceChange: PropTypes.func.isRequired,
   getText: PropTypes.func.isRequired,
-  uiTranslations: PropTypes.object.isRequired
+  uiTranslations: PropTypes.object.isRequired,
+  isApiOperationInProgress: PropTypes.bool
 };
 
 export default FormItem; 

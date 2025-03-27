@@ -32,6 +32,12 @@ function App() {
     validationErrors,
     language,
     isAuthenticated,
+    isLoadingQuestions,
+    isLoadingAnswers,
+    isSavingQuestions,
+    isSavingAnswers,
+    isResettingData,
+    isApiOperationInProgress,
     getText,
     handleLanguageChange,
     handleChoiceChange,
@@ -57,6 +63,7 @@ function App() {
         uiTranslations={uiTranslations}
         handleLanguageChange={handleLanguageChange}
         isAuthenticated={isAuthenticated}
+        isApiOperationInProgress={isApiOperationInProgress}
       />
       
       <div className="container">
@@ -74,6 +81,10 @@ function App() {
               uiTranslations={uiTranslations}
               language={language}
               isAuthenticated={isAuthenticated}
+              isLoadingQuestions={isLoadingQuestions}
+              isSavingQuestions={isSavingQuestions}
+              isResettingData={isResettingData}
+              isApiOperationInProgress={isApiOperationInProgress}
             />
           )}
 
@@ -90,6 +101,10 @@ function App() {
             handleChoiceChange={handleChoiceChange}
             getText={getText}
             isAuthenticated={isAuthenticated}
+            isLoadingQuestions={isLoadingQuestions}
+            isLoadingAnswers={isLoadingAnswers}
+            isSavingAnswers={isSavingAnswers}
+            isApiOperationInProgress={isApiOperationInProgress}
           />
 
           {debugMode && (

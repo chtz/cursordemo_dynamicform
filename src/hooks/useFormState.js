@@ -35,6 +35,13 @@ export const useFormState = () => {
   const [validationErrors, setValidationErrors] = useState({});
   const [language, setLanguage] = useState(DEFAULT_LANGUAGE);
   
+  // Loading states for API operations
+  const [isLoadingQuestions, setIsLoadingQuestions] = useState(false);
+  const [isLoadingAnswers, setIsLoadingAnswers] = useState(false);
+  const [isSavingQuestions, setIsSavingQuestions] = useState(false);
+  const [isSavingAnswers, setIsSavingAnswers] = useState(false);
+  const [isResettingData, setIsResettingData] = useState(false);
+  
   // Flag to prevent form items from updating the JSON text 
   // This breaks the circular dependency between form items and JSON text
   const isEditing = useRef(false);
@@ -65,6 +72,13 @@ export const useFormState = () => {
     return !auth.isLoading;
   }, [auth.isLoading]);
 
+  // Computed property to check if any API operation is in progress
+  const isApiOperationInProgress = useCallback(() => {
+    return isLoadingQuestions || isLoadingAnswers || isSavingQuestions || 
+           isSavingAnswers || isResettingData || auth.isLoading;
+  }, [isLoadingQuestions, isLoadingAnswers, isSavingQuestions, isSavingAnswers, 
+      isResettingData, auth.isLoading]);
+
   // Load questions and answers from storage when authentication is ready
   useEffect(() => {
     // Only proceed if auth state is fully initialized (not loading)
@@ -84,28 +98,46 @@ export const useFormState = () => {
           console.log('Fetching data with access token');
           dataFetched.current = true;
           
-          // Load questions
-          const savedQuestions = await loadQuestions(accessToken);
-          if (savedQuestions) {
-            setFormItems(savedQuestions);
+          // Set loading states
+          setIsLoadingQuestions(true);
+          setIsLoadingAnswers(true);
+          
+          try {
+            // Load questions
+            const savedQuestions = await loadQuestions(accessToken);
+            if (savedQuestions) {
+              setFormItems(savedQuestions);
+            }
+          } catch (error) {
+            console.error('Failed to load questions:', error);
+          } finally {
+            setIsLoadingQuestions(false);
           }
 
-          // Load answers
-          const savedAnswers = await loadAnswers(accessToken);
-          if (savedAnswers) {
-            // Check if answers are in the new format (with language)
-            if (savedAnswers.language && savedAnswers.answers) {
-              setUserAnswers(savedAnswers);
-              // Set the language based on saved preference
-              setLanguage(savedAnswers.language);
-            } else {
-              // Handle legacy format
-              setUserAnswers(prev => ({ ...prev, answers: savedAnswers }));
+          try {
+            // Load answers
+            const savedAnswers = await loadAnswers(accessToken);
+            if (savedAnswers) {
+              // Check if answers are in the new format (with language)
+              if (savedAnswers.language && savedAnswers.answers) {
+                setUserAnswers(savedAnswers);
+                // Set the language based on saved preference
+                setLanguage(savedAnswers.language);
+              } else {
+                // Handle legacy format
+                setUserAnswers(prev => ({ ...prev, answers: savedAnswers }));
+              }
             }
+          } catch (error) {
+            console.error('Failed to load answers:', error);
+          } finally {
+            setIsLoadingAnswers(false);
           }
         }
       } catch (error) {
         console.error('Failed to load saved data:', error);
+        setIsLoadingQuestions(false);
+        setIsLoadingAnswers(false);
       }
     };
 
@@ -134,6 +166,13 @@ export const useFormState = () => {
       // Clear status messages
       setSaveStatus('');
       setQuestionsStatus('');
+      
+      // Clear all loading states
+      setIsLoadingQuestions(false);
+      setIsLoadingAnswers(false);
+      setIsSavingQuestions(false);
+      setIsSavingAnswers(false);
+      setIsResettingData(false);
     }
   }, [auth.isAuthenticated, auth.error, debugMode]);
 
@@ -156,6 +195,9 @@ export const useFormState = () => {
    * @param {Object} e - Event object containing the selected language
    */
   const handleLanguageChange = useCallback((e) => {
+    // Prevent changes during API operations
+    if (isApiOperationInProgress()) return;
+    
     const newLanguage = e.target.value;
     setLanguage(newLanguage);
 
@@ -164,7 +206,7 @@ export const useFormState = () => {
       ...prev,
       language: newLanguage
     }));
-  }, []);
+  }, [isApiOperationInProgress]);
 
   /**
    * Handle choice/radio button change
@@ -172,6 +214,9 @@ export const useFormState = () => {
    * @param {string} optionId - ID of the selected option
    */
   const handleChoiceChange = useCallback((questionId, optionId) => {
+    // Prevent changes during API operations
+    if (isApiOperationInProgress()) return;
+    
     setUserAnswers(prev => ({
       ...prev,
       answers: {
@@ -188,7 +233,7 @@ export const useFormState = () => {
       delete newErrors[questionId];
       return newErrors;
     });
-  }, []);
+  }, [isApiOperationInProgress]);
 
   /**
    * Handle text input change
@@ -196,6 +241,9 @@ export const useFormState = () => {
    * @param {string} value - Text value entered by the user
    */
   const handleTextChange = useCallback((questionId, value) => {
+    // Prevent changes during API operations
+    if (isApiOperationInProgress()) return;
+    
     setUserAnswers(prev => ({
       ...prev,
       answers: {
@@ -214,7 +262,7 @@ export const useFormState = () => {
         return newErrors;
       });
     }
-  }, []);
+  }, [isApiOperationInProgress]);
 
   /**
    * Validate the form to ensure all questions have answers
@@ -230,6 +278,9 @@ export const useFormState = () => {
    * Handle saving answers to storage
    */
   const handleSaveAnswers = useCallback(async () => {
+    // Prevent multiple concurrent save operations
+    if (isSavingAnswers) return;
+    
     try {
       // Check if auth is loading or not authenticated
       if (auth.isLoading) {
@@ -249,13 +300,18 @@ export const useFormState = () => {
         return;
       }
       
+      // Set loading state
+      setIsSavingAnswers(true);
+      
       // Save both the answers and the current language
       await saveAnswers(userAnswers, accessToken);
       setTimedStatus(setSaveStatus, uiTranslations[language].savedSuccessfully);
     } catch (error) {
       setTimedStatus(setSaveStatus, uiTranslations[language].errorSaving);
+    } finally {
+      setIsSavingAnswers(false);
     }
-  }, [userAnswers, language, auth.isAuthenticated, auth.isLoading, getAccessToken]);
+  }, [userAnswers, language, auth.isAuthenticated, auth.isLoading, getAccessToken, isSavingAnswers]);
 
   /**
    * Handle form submission
@@ -264,6 +320,9 @@ export const useFormState = () => {
   const handleSubmit = useCallback((e) => {
     e.preventDefault();
 
+    // Prevent submission during API operations
+    if (isApiOperationInProgress()) return;
+    
     // Check if auth is loading
     if (auth.isLoading) {
       setTimedStatus(setSaveStatus, uiTranslations[language].authLoading);
@@ -297,12 +356,15 @@ export const useFormState = () => {
         }
       }
     }
-  }, [validateFormData, validationErrors, language, auth.isAuthenticated, auth.isLoading, getAccessToken, handleSaveAnswers]);
+  }, [validateFormData, validationErrors, language, auth.isAuthenticated, auth.isLoading, getAccessToken, handleSaveAnswers, isApiOperationInProgress]);
 
   /**
    * Handle loading answers from storage
    */
   const handleLoadAnswers = useCallback(async () => {
+    // Prevent multiple concurrent load operations
+    if (isLoadingAnswers) return;
+    
     try {
       // Check if auth is loading or not authenticated
       if (auth.isLoading) {
@@ -320,6 +382,9 @@ export const useFormState = () => {
         setTimedStatus(setSaveStatus, uiTranslations[language].tokenMissing);
         return;
       }
+      
+      // Set loading state
+      setIsLoadingAnswers(true);
       
       const savedAnswers = await loadAnswers(accessToken);
       if (savedAnswers) {
@@ -341,8 +406,10 @@ export const useFormState = () => {
       setValidationErrors({});
     } catch (error) {
       setTimedStatus(setSaveStatus, uiTranslations[language].errorLoading);
+    } finally {
+      setIsLoadingAnswers(false);
     }
-  }, [language, getAccessToken, auth.isAuthenticated, auth.isLoading]);
+  }, [language, getAccessToken, auth.isAuthenticated, auth.isLoading, isLoadingAnswers]);
 
   /**
    * Handle changes to the JSON editor
@@ -350,6 +417,9 @@ export const useFormState = () => {
    * @param {Object} e - Change event from the textarea
    */
   const handleQuestionsJsonChange = useCallback((e) => {
+    // Prevent changes during API operations
+    if (isApiOperationInProgress()) return;
+    
     const newValue = e.target.value;
     
     // Always update the displayed JSON text with exactly what user typed
@@ -370,13 +440,16 @@ export const useFormState = () => {
         }
       );
     });
-  }, []);
+  }, [isApiOperationInProgress]);
 
   /**
    * Format JSON in the textarea (explicit user action)
    * Only formats when the user clicks the button
    */
   const formatJson = useCallback(() => {
+    // Prevent formatting during API operations
+    if (isApiOperationInProgress()) return;
+    
     safeParseJSON(
       questionsJson,
       // On success
@@ -392,13 +465,16 @@ export const useFormState = () => {
         setJsonError(`Cannot format: ${errorMsg}`);
       }
     );
-  }, [questionsJson]);
+  }, [questionsJson, isApiOperationInProgress]);
 
   /**
    * Handle saving questions to storage
    * Parses and validates JSON before saving
    */
   const handleSaveQuestions = useCallback(async () => {
+    // Prevent multiple concurrent save operations
+    if (isSavingQuestions) return;
+    
     // Check if auth is loading or not authenticated
     if (auth.isLoading) {
       setTimedStatus(setQuestionsStatus, uiTranslations[language].authLoading);
@@ -422,6 +498,9 @@ export const useFormState = () => {
             return;
           }
           
+          // Set loading state
+          setIsSavingQuestions(true);
+          
           // Update form items and save them
           setFormItems(parsedQuestions);
           await saveQuestions(parsedQuestions, accessToken);
@@ -431,6 +510,8 @@ export const useFormState = () => {
             setQuestionsStatus, 
             `${uiTranslations[language].errorSaving}: ${error.message}`
           );
+        } finally {
+          setIsSavingQuestions(false);
         }
       },
       // On error
@@ -442,12 +523,15 @@ export const useFormState = () => {
         setJsonError(errorMsg);
       }
     );
-  }, [questionsJson, language, auth.isAuthenticated, auth.isLoading, getAccessToken]);
+  }, [questionsJson, language, auth.isAuthenticated, auth.isLoading, getAccessToken, isSavingQuestions]);
 
   /**
    * Handle loading questions from localStorage
    */
   const handleLoadQuestions = useCallback(async () => {
+    // Prevent multiple concurrent load operations
+    if (isLoadingQuestions) return;
+    
     try {
       // Check if auth is loading or not authenticated
       if (auth.isLoading) {
@@ -465,6 +549,9 @@ export const useFormState = () => {
         setTimedStatus(setQuestionsStatus, uiTranslations[language].tokenMissing);
         return;
       }
+      
+      // Set loading state
+      setIsLoadingQuestions(true);
       
       const savedQuestions = await loadQuestions(accessToken);
       if (savedQuestions) {
@@ -489,13 +576,18 @@ export const useFormState = () => {
         setQuestionsStatus, 
         `${uiTranslations[language].errorLoading}: ${error.message}`
       );
+    } finally {
+      setIsLoadingQuestions(false);
     }
-  }, [language, getAccessToken, auth.isAuthenticated, auth.isLoading]);
+  }, [language, getAccessToken, auth.isAuthenticated, auth.isLoading, isLoadingQuestions]);
 
   /**
    * Reset questions and answers to initial default and clear storage
    */
   const handleResetQuestions = useCallback(async () => {
+    // Prevent multiple concurrent reset operations
+    if (isResettingData) return;
+    
     // Check if auth is loading or not authenticated
     if (auth.isLoading) {
       setTimedStatus(setQuestionsStatus, uiTranslations[language].authLoading);
@@ -514,6 +606,9 @@ export const useFormState = () => {
         setTimedStatus(setQuestionsStatus, uiTranslations[language].tokenMissing);
         return;
       }
+      
+      // Set loading state
+      setIsResettingData(true);
       
       // Clear all data from storage
       await clearAllStoredData(accessToken);
@@ -541,13 +636,18 @@ export const useFormState = () => {
       }, 3000);
     } catch (error) {
       setTimedStatus(setQuestionsStatus, `Error resetting data: ${error.message}`);
+    } finally {
+      setIsResettingData(false);
     }
-  }, [language, auth.isAuthenticated, auth.isLoading, getAccessToken]);
+  }, [language, auth.isAuthenticated, auth.isLoading, getAccessToken, isResettingData]);
 
   /**
    * Toggle Debug on/off
    */
   const toggleDebugMode = useCallback(() => {
+    // Prevent toggling during API operations
+    if (isApiOperationInProgress()) return;
+    
     setDebugMode(prevMode => {
       // When turning Debug on, update the JSON display
       if (!prevMode) {
@@ -557,7 +657,7 @@ export const useFormState = () => {
       }
       return !prevMode;
     });
-  }, [formItems]);
+  }, [formItems, isApiOperationInProgress]);
 
   return {
     formItems,
@@ -570,6 +670,12 @@ export const useFormState = () => {
     validationErrors,
     language,
     isAuthenticated: auth.isAuthenticated,
+    isLoadingQuestions,
+    isLoadingAnswers,
+    isSavingQuestions, 
+    isSavingAnswers,
+    isResettingData,
+    isApiOperationInProgress: isApiOperationInProgress(),
     getText,
     handleLanguageChange,
     handleChoiceChange,

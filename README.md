@@ -9,7 +9,7 @@ This interactive form application was created **entirely by AI** using Cursor ID
 ## Features
 
 - **Form Functionality**
-  - Multi-language support (English/Spanish)
+  - Multi-language support (English/German)
   - Various input types (radio selection, multiline text, display elements)
   - Form validation
   - Debug for form editing and JSON manipulation

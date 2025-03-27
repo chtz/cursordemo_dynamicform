@@ -12,6 +12,7 @@ import AuthButton from './AuthButton';
  * @param {Object} props.uiTranslations Translations for UI elements
  * @param {Function} props.handleLanguageChange Handler for language changes
  * @param {boolean} props.isAuthenticated Whether the user is authenticated
+ * @param {boolean} props.isApiOperationInProgress Whether any API operation is in progress
  * @returns {JSX.Element} Header UI
  */
 const Header = ({ 
@@ -21,7 +22,8 @@ const Header = ({
   language, 
   uiTranslations, 
   handleLanguageChange, 
-  isAuthenticated
+  isAuthenticated,
+  isApiOperationInProgress
 }) => {
   return (
     <header>
@@ -37,6 +39,7 @@ const Header = ({
                   id="debug-toggle"
                   checked={debugMode}
                   onChange={toggleDebugMode}
+                  disabled={isApiOperationInProgress}
                 />
                 <span className="slider"></span>
               </div>
@@ -45,9 +48,13 @@ const Header = ({
           <LanguageSelector 
             currentLanguage={language} 
             translations={uiTranslations[language]} 
-            onChange={handleLanguageChange} 
+            onChange={handleLanguageChange}
+            disabled={isApiOperationInProgress}
           />
-          <AuthButton translations={uiTranslations[language]} />
+          <AuthButton 
+            translations={uiTranslations[language]} 
+            isApiOperationInProgress={isApiOperationInProgress}
+          />
         </div>
       </div>
     </header>
@@ -61,7 +68,8 @@ Header.propTypes = {
   language: PropTypes.string.isRequired,
   uiTranslations: PropTypes.object.isRequired,
   handleLanguageChange: PropTypes.func.isRequired,
-  isAuthenticated: PropTypes.bool
+  isAuthenticated: PropTypes.bool,
+  isApiOperationInProgress: PropTypes.bool
 };
 
 export default Header; 
