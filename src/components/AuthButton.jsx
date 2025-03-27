@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types';
 import { useAuth } from 'react-oidc-context';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 /**
  * Login/Logout button component that uses react-oidc-context for authentication
@@ -11,12 +11,23 @@ import { useEffect } from 'react';
  */
 const AuthButton = ({ translations, isApiOperationInProgress }) => {
   const auth = useAuth();
+  const isHandlingError = useRef(false);
 
   // Automatically handle auth errors by logging out
   useEffect(() => {
-    if (auth.error) {
+    if (auth.error && !isHandlingError.current) {
       console.warn('Authentication error detected, logging out:', auth.error.message);
+      
+      // Set flag to prevent re-entry
+      isHandlingError.current = true;
+      
+      // Log out the user
       auth.removeUser();
+      
+      // Reset flag after a delay to prevent immediate re-triggering
+      setTimeout(() => {
+        isHandlingError.current = false;
+      }, 1000);
     }
   }, [auth.error, auth]);
 

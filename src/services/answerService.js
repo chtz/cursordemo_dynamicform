@@ -6,6 +6,42 @@ const ANSWERS_STORAGE_KEY = 'dynamicform_answers';
 const QUESTIONS_STORAGE_KEY = 'dynamicform_questions';
 
 /**
+ * Helper function to execute fetch with retry logic
+ * @param {Function} fetchOperation - Function that returns a fetch promise
+ * @param {number} maxRetries - Maximum number of retry attempts
+ * @param {number} delay - Delay between retries in ms
+ * @returns {Promise} - Promise resolving to the fetch response
+ */
+const fetchWithRetry = async (fetchOperation, maxRetries = 2, delay = 1000) => {
+  let lastError = null;
+  
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      // Wait for an increasing delay before retrying
+      if (attempt > 0) {
+        await new Promise(resolve => setTimeout(resolve, delay * attempt));
+      }
+      
+      return await fetchOperation();
+    } catch (error) {
+      lastError = error;
+      
+      // If it's a network error, try again
+      if (error.message === 'Failed to fetch') {
+        console.warn(`Network error (attempt ${attempt}/${maxRetries}), retrying...`);
+        continue;
+      }
+      
+      // For other errors, don't retry
+      throw error;
+    }
+  }
+  
+  // If we've exhausted retries, throw the last error
+  throw lastError;
+};
+
+/**
  * Save answers to storage
  * @param {Object} answers - Object containing question-answer pairs
  * @param {string} [accessToken] - Access token for authenticated operations
@@ -21,15 +57,17 @@ export const saveAnswers = async (answers, accessToken) => {
     // Convert answers object to string for storage
     const answersString = JSON.stringify(answers);
     
-    // Save to API
-    const response = await fetch(`${API_BASE_URL}/${ANSWERS_STORAGE_KEY}`, {
-      method: 'PUT',
-      headers: { 
-        'Content-Type': 'application/text',
-        'Authorization': `Bearer ${accessToken}`
-      },
-      body: answersString
-    });
+    // Save to API with retry
+    const response = await fetchWithRetry(() => 
+      fetch(`${API_BASE_URL}/${ANSWERS_STORAGE_KEY}`, {
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/text',
+          'Authorization': `Bearer ${accessToken}`
+        },
+        body: answersString
+      })
+    );
 
     if (!response.ok) {
       throw new Error(`Failed to save answers: ${response.status} ${response.statusText}`);
@@ -54,12 +92,14 @@ export const loadAnswers = async (accessToken) => {
       return null;
     }
 
-    // Load from API
-    const response = await fetch(`${API_BASE_URL}/${ANSWERS_STORAGE_KEY}`, {
-      headers: {
-        'Authorization': `Bearer ${accessToken}`
-      }
-    });
+    // Load from API with retry
+    const response = await fetchWithRetry(() => 
+      fetch(`${API_BASE_URL}/${ANSWERS_STORAGE_KEY}`, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
+      })
+    );
 
     // Handle 404 for missing data
     if (response.status === 404) {
@@ -95,15 +135,17 @@ export const saveQuestions = async (questions, accessToken) => {
     // Convert questions array to string for storage
     const questionsString = JSON.stringify(questions);
     
-    // Save to API
-    const response = await fetch(`${API_BASE_URL}/${QUESTIONS_STORAGE_KEY}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/text',
-        'Authorization': `Bearer ${accessToken}`
-      },
-      body: questionsString
-    });
+    // Save to API with retry
+    const response = await fetchWithRetry(() => 
+      fetch(`${API_BASE_URL}/${QUESTIONS_STORAGE_KEY}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/text',
+          'Authorization': `Bearer ${accessToken}`
+        },
+        body: questionsString
+      })
+    );
 
     if (!response.ok) {
       throw new Error(`Failed to save questions: ${response.status} ${response.statusText}`);
@@ -128,12 +170,14 @@ export const loadQuestions = async (accessToken) => {
       return null;
     }
 
-    // Load from API
-    const response = await fetch(`${API_BASE_URL}/${QUESTIONS_STORAGE_KEY}`, {
-      headers: {
-        'Authorization': `Bearer ${accessToken}`
-      }
-    });
+    // Load from API with retry
+    const response = await fetchWithRetry(() => 
+      fetch(`${API_BASE_URL}/${QUESTIONS_STORAGE_KEY}`, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
+      })
+    );
 
     // Handle 404 for missing data
     if (response.status === 404) {
@@ -165,16 +209,20 @@ export const clearAllStoredData = async (accessToken) => {
       throw new Error('Authentication required');
     }
 
-    // Delete data using the DELETE endpoints
-    const deleteAnswersPromise = fetch(`${API_BASE_URL}/${ANSWERS_STORAGE_KEY}`, {
-      method: 'DELETE',
-      headers: { 'Authorization': `Bearer ${accessToken}` }
-    });
+    // Delete data using the DELETE endpoints with retry
+    const deleteAnswersPromise = fetchWithRetry(() => 
+      fetch(`${API_BASE_URL}/${ANSWERS_STORAGE_KEY}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${accessToken}` }
+      })
+    );
     
-    const deleteQuestionsPromise = fetch(`${API_BASE_URL}/${QUESTIONS_STORAGE_KEY}`, {
-      method: 'DELETE',
-      headers: { 'Authorization': `Bearer ${accessToken}` }
-    });
+    const deleteQuestionsPromise = fetchWithRetry(() => 
+      fetch(`${API_BASE_URL}/${QUESTIONS_STORAGE_KEY}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${accessToken}` }
+      })
+    );
 
     // Wait for both delete operations to complete
     const [answersResponse, questionsResponse] = await Promise.all([

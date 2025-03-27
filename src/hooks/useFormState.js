@@ -42,12 +42,13 @@ export const useFormState = () => {
   const [isSavingAnswers, setIsSavingAnswers] = useState(false);
   const [isResettingData, setIsResettingData] = useState(false);
   
+  // Ref declarations must be before any useCallback or useEffect
   // Flag to prevent form items from updating the JSON text 
-  // This breaks the circular dependency between form items and JSON text
   const isEditing = useRef(false);
-  
   // Track if we've already fetched data to avoid duplicate fetches
   const dataFetched = useRef(false);
+  // Flag to prevent multiple form resets
+  const isResettingForm = useRef(false);
 
   /**
    * Helper function to get text in current language with fallback to English
@@ -78,6 +79,46 @@ export const useFormState = () => {
            isSavingAnswers || isResettingData || auth.isLoading;
   }, [isLoadingQuestions, isLoadingAnswers, isSavingQuestions, isSavingAnswers, 
       isResettingData, auth.isLoading]);
+
+  // Reset the dataFetched flag when auth state changes or error occurs
+  // This allows refetching data when user logs in
+  useEffect(() => {
+    // Reset form when user logs out or an auth error occurs
+    if ((!auth.isAuthenticated || auth.error) && !isResettingForm.current) {
+      // Set flag to prevent multiple resets
+      isResettingForm.current = true;
+      
+      dataFetched.current = false;
+      
+      // Reset form items and answers when user logs out
+      setFormItems(initialFormItems);
+      setUserAnswers({ language: DEFAULT_LANGUAGE, answers: {} });
+      setValidationErrors({});
+      
+      // Also reset JSON in debug mode
+      if (debugMode) {
+        withEditingState(isEditing, () => {
+          setQuestionsJson(JSON.stringify(initialFormItems, null, 2));
+        });
+      }
+      
+      // Clear status messages
+      setSaveStatus('');
+      setQuestionsStatus('');
+      
+      // Clear all loading states
+      setIsLoadingQuestions(false);
+      setIsLoadingAnswers(false);
+      setIsSavingQuestions(false);
+      setIsSavingAnswers(false);
+      setIsResettingData(false);
+      
+      // Reset the flag after a delay to allow for future resets
+      setTimeout(() => {
+        isResettingForm.current = false;
+      }, 1000);
+    }
+  }, [auth.isAuthenticated, auth.error, debugMode]);
 
   // Load questions and answers from storage when authentication is ready
   useEffect(() => {
@@ -144,38 +185,6 @@ export const useFormState = () => {
     fetchData();
   }, [auth.isAuthenticated, getAccessToken, isAuthReady]);
   
-  // Reset the dataFetched flag when auth state changes or error occurs
-  // This allows refetching data when user logs in
-  useEffect(() => {
-    // Reset form when user logs out or an auth error occurs
-    if (!auth.isAuthenticated || auth.error) {
-      dataFetched.current = false;
-      
-      // Reset form items and answers when user logs out
-      setFormItems(initialFormItems);
-      setUserAnswers({ language: DEFAULT_LANGUAGE, answers: {} });
-      setValidationErrors({});
-      
-      // Also reset JSON in debug mode
-      if (debugMode) {
-        withEditingState(isEditing, () => {
-          setQuestionsJson(JSON.stringify(initialFormItems, null, 2));
-        });
-      }
-      
-      // Clear status messages
-      setSaveStatus('');
-      setQuestionsStatus('');
-      
-      // Clear all loading states
-      setIsLoadingQuestions(false);
-      setIsLoadingAnswers(false);
-      setIsSavingQuestions(false);
-      setIsSavingAnswers(false);
-      setIsResettingData(false);
-    }
-  }, [auth.isAuthenticated, auth.error, debugMode]);
-
   // Set initial questions JSON when entering Debug
   useEffect(() => {
     if (debugMode && !questionsJson) {
